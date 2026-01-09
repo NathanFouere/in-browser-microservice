@@ -162,7 +162,7 @@ if (document.readyState === "loading") {
 
 export function logout() {
   try {
-    if (di.sessionStorageUserService && di.sessionStorageUserService.getLoggedUser != null) {
+    if (di.sessionStorageUserService && di.sessionStorageUserService.getLoggedUser() != null) {
       di.sessionStorageUserService.setLoggedUser(null);
       sessionStorage.removeItem("user");
     }
