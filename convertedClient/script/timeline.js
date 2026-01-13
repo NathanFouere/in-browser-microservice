@@ -54,18 +54,19 @@ export default function showTimeline(type) {
       // Hook buttons
       const deleteBtn = clone.querySelector(".delete-post-btn");
       if (deleteBtn) {
-        deleteBtn.onclick = () => {
-          di.postStorageHandler.DeletePost(p.post_id);
-          showTimeline("main"); // Refresh without reload
-        };
+        deleteBtn.addEventListener('click', () => {
+          $('#deletePostModal').data('post-id', p.post_id).modal('show');
+        });
       }
 
       const editBtn = clone.querySelector(".edit-post-btn");
       if (editBtn) {
-        editBtn.onclick = () => {
-          di.postStorageHandler.EditPostText(p.post_id, "edited post");
-          showTimeline("main"); // Refresh without reload
-        };
+        editBtn.addEventListener('click', () => {
+          $('#editPostModal').data('post-id', p.post_id);
+          const editPostTextarea = document.getElementById('editPostTextarea');
+          editPostTextarea.value = p.text;
+          $('#editPostModal').modal('show');
+        });
       }
 
       cardBlock.appendChild(clone);
@@ -101,6 +102,26 @@ function initTimeline() {
     });
   }
 
+  $('#confirmDeletePostBtn').on('click', () => {
+    const postId = $('#deletePostModal').data('post-id');
+    if (postId) {
+      di.postStorageHandler.DeletePost(postId);
+      $('#deletePostModal').modal('hide');
+      showTimeline("main");
+      //setTimeout(() => { showTimeline("main"); }, 500);
+    }
+  });
+
+  $('#confirmEditPostBtn').on('click', () => {
+    const postId = $('#editPostModal').data('post-id');
+    if (postId) {
+      const editPostTextarea = document.getElementById('editPostTextarea');
+      di.postStorageHandler.EditPostText(postId, editPostTextarea.value);
+      $('#editPostModal').modal('hide');
+      showTimeline("main");
+      //setTimeout(() => { showTimeline("main"); }, 500);
+    }
+  });
   const sortBtn = document.getElementById('sort-toggle-btn');
   if (sortBtn) {
     sortBtn.addEventListener('click', () => {
