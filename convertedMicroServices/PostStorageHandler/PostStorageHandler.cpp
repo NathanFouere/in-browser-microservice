@@ -8,7 +8,7 @@
 using namespace emscripten;
 using nlohmann::json;
 
-EM_ASYNC_JS(void, edit_post_in_indexed_db, (const char *post_json_cstr), {
+EM_JS(void, edit_post_in_indexed_db, (const char *post_json_cstr), {
   const post_json_utf_8 = UTF8ToString(post_json_cstr);
   const updatedPost = JSON.parse(post_json_utf_8);
   console.log(updatedPost);
@@ -33,7 +33,7 @@ EM_ASYNC_JS(void, edit_post_in_indexed_db, (const char *post_json_cstr), {
   }
 });
 
-EM_ASYNC_JS(void, delete_post_in_indexed_db, (int64_t post_id), {
+EM_JS(void, delete_post_in_indexed_db, (int64_t post_id), {
   const postsArray = Module.ydoc.getArray("posts");
   let idxOfPost = null;
   for (let i = 0; i < postsArray.length; i++) {
@@ -49,7 +49,7 @@ EM_ASYNC_JS(void, delete_post_in_indexed_db, (int64_t post_id), {
   }
 });
 
-EM_ASYNC_JS(char *, get_posts_from_indexed_db, (), {
+EM_JS(char *, get_posts_from_indexed_db, (), {
   const postsArray = Module.ydoc.getArray("posts");
 
   const allPosts = postsArray;
@@ -57,7 +57,7 @@ EM_ASYNC_JS(char *, get_posts_from_indexed_db, (), {
   return stringToNewUTF8(JSON.stringify(allPosts));
 });
 
-EM_ASYNC_JS(void, save_post_in_indexed_db, (const char *post_json_cstr), {
+EM_JS(void, save_post_in_indexed_db, (const char *post_json_cstr), {
   console.log("debut save post in indexeddb");
   const postsArray = Module.ydoc.getArray("posts");
   const post_json_utf_8 = UTF8ToString(post_json_cstr);

@@ -16,13 +16,29 @@ export default function showTimeline(type) {
     const onlyFriends = onlyFriendsToggle ? onlyFriendsToggle.checked : false;
 
     // Fetch posts (synchronous for now based on current impl)
-    const posts = di.homeTimelineHandler.ReadHomeTimeline(loggedUser.userid, 0, 10, onlyFriends);
+    const postsVector = di.homeTimelineHandler.ReadHomeTimeline(loggedUser.userid, 0, 10, onlyFriends);
+
+    const posts = [];
+    for (let i = 0; i < postsVector.size(); i++) {
+      posts.push(postsVector.get(i));
+    }
+
+    // Sort by timestamp based on toggle button
+    const sortBtn = document.getElementById('sort-toggle-btn');
+    const sortAsc = sortBtn ? sortBtn.getAttribute('data-sort') === 'asc' : false;
+
+    posts.sort((a, b) => {
+      const valA = Number(a.timestamp);
+      const valB = Number(b.timestamp);
+      if (valA > valB) return sortAsc ? 1 : -1;
+      if (valA < valB) return sortAsc ? -1 : 1;
+      return 0;
+    });
 
     // Clear current posts
     cardBlock.innerHTML = "";
 
-    for (var i = 0; i < posts.size(); i++) {
-      const p = posts.get(i);
+    for (const p of posts) {
       const date = new Date(Number(p.timestamp) * 1000);
 
       const clone = postTemplate.cloneNode(true);
@@ -62,6 +78,12 @@ export default function showTimeline(type) {
 window.showTimeline = showTimeline;
 
 function initTimeline() {
+  if (!di.sessionStorageUserService.getLoggedUser()) {
+    console.log("User not logged in, redirecting to login page.");
+    window.location.href = "../index.html";
+    return;
+  }
+
   const allCards = document.getElementsByClassName("post-card");
   if (allCards.length > 0) {
     console.log("timeline.js: Template captured.");
@@ -100,6 +122,36 @@ function initTimeline() {
       //setTimeout(() => { showTimeline("main"); }, 500);
     }
   });
+  const sortBtn = document.getElementById('sort-toggle-btn');
+  if (sortBtn) {
+    sortBtn.addEventListener('click', () => {
+      const currentSort = sortBtn.getAttribute('data-sort');
+      const newSort = currentSort === 'desc' ? 'asc' : 'desc';
+      sortBtn.setAttribute('data-sort', newSort);
+
+      // Update UI
+      const icon = sortBtn.querySelector('i');
+      const label = document.getElementById('sort-label');
+
+      if (newSort === 'asc') {
+        icon.className = 'fas fa-arrow-up';
+        label.innerText = 'Oldest first';
+      } else {
+        icon.className = 'fas fa-arrow-down';
+        label.innerText = 'Newest first';
+      }
+
+      showTimeline("main");
+    });
+  }
+
+  const logoutBtn = document.getElementById('logout-btn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      logout();
+    });
+  }
 }
 
 if (document.readyState === "loading") {
@@ -107,3 +159,18 @@ if (document.readyState === "loading") {
 } else {
   initTimeline();
 }
+
+export function logout() {
+  try {
+    if (di.sessionStorageUserService && di.sessionStorageUserService.getLoggedUser != null) {
+      di.sessionStorageUserService.setLoggedUser(null);
+      localStorage.removeItem("username");
+    }
+  } catch (e) {
+    console.error("Error during logout:", e);
+    // Fallback if binding fails
+    localStorage.removeItem("username");
+  }
+  window.location.href = "../index.html";
+}
+window.logout = logout;

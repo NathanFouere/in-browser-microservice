@@ -6870,10 +6870,10 @@ function checkIncomingModuleAPI() {
 }
 function __asyncjs__get_social_graph_from_indexed_db() { return Asyncify.handleAsync(async () => { const val = Module.ydoc.getArray("social_graph"); return stringToNewUTF8(JSON.stringify(val)); }); }
 function __asyncjs__save_user_graph_in_indexed_db(ug_json_cstr) { return Asyncify.handleAsync(async () => { const ug_json_utf_8 = UTF8ToString(ug_json_cstr); const updatedUg = JSON.parse(ug_json_utf_8); const ugArray = Module.ydoc.getArray("social_graph"); let idx = null; for (let i = 0; i < ugArray.length; i++) { if (ugArray.get(i).user_id == Number(updatedUg.user_id)) { idx = i; break; } } if (null != idx) { ugArray.delete(idx); ugArray.insert(idx, [updatedUg]); } else { ugArray.push([updatedUg]); } }); }
-function __asyncjs__edit_post_in_indexed_db(post_json_cstr) { return Asyncify.handleAsync(async () => { const post_json_utf_8 = UTF8ToString(post_json_cstr); const updatedPost = JSON.parse(post_json_utf_8); console.log(updatedPost); const postsArray = Module.ydoc.getArray("posts"); let idxOfPost = null; for (let i = 0; i < postsArray.length; i++) { if (postsArray.get(i).post_id == Number(updatedPost.post_id)) { idxOfPost = i; break; } } if (null != idxOfPost) { postsArray.delete(idxOfPost); postsArray.insert(idxOfPost, [updatedPost]); } }); }
-function __asyncjs__delete_post_in_indexed_db(post_id) { return Asyncify.handleAsync(async () => { const postsArray = Module.ydoc.getArray("posts"); let idxOfPost = null; for (let i = 0; i < postsArray.length; i++) { if (postsArray.get(i).post_id == Number(post_id)) { idxOfPost = i; break; } } if (null != idxOfPost) { postsArray.delete(idxOfPost) } }); }
-function __asyncjs__get_posts_from_indexed_db() { return Asyncify.handleAsync(async () => { const postsArray = Module.ydoc.getArray("posts"); const allPosts = postsArray; return stringToNewUTF8(JSON.stringify(allPosts)); }); }
-function __asyncjs__save_post_in_indexed_db(post_json_cstr) { return Asyncify.handleAsync(async () => { console.log("debut save post in indexeddb"); const postsArray = Module.ydoc.getArray("posts"); const post_json_utf_8 = UTF8ToString(post_json_cstr); const post = JSON.parse(post_json_utf_8); postsArray.push([post]); }); }
+function edit_post_in_indexed_db(post_json_cstr) { const post_json_utf_8 = UTF8ToString(post_json_cstr); const updatedPost = JSON.parse(post_json_utf_8); console.log(updatedPost); const postsArray = Module.ydoc.getArray("posts"); let idxOfPost = null; for (let i = 0; i < postsArray.length; i++) { if (postsArray.get(i).post_id == Number(updatedPost.post_id)) { idxOfPost = i; break; } } if (null != idxOfPost) { postsArray.delete(idxOfPost); postsArray.insert(idxOfPost, [updatedPost]); } }
+function delete_post_in_indexed_db(post_id) { const postsArray = Module.ydoc.getArray("posts"); let idxOfPost = null; for (let i = 0; i < postsArray.length; i++) { if (postsArray.get(i).post_id == Number(post_id)) { idxOfPost = i; break; } } if (null != idxOfPost) { postsArray.delete(idxOfPost) } }
+function get_posts_from_indexed_db() { const postsArray = Module.ydoc.getArray("posts"); const allPosts = postsArray; return stringToNewUTF8(JSON.stringify(allPosts)); }
+function save_post_in_indexed_db(post_json_cstr) { console.log("debut save post in indexeddb"); const postsArray = Module.ydoc.getArray("posts"); const post_json_utf_8 = UTF8ToString(post_json_cstr); const post = JSON.parse(post_json_utf_8); postsArray.push([post]); }
 function get_user_in_session_storage_js() { console.log("Loading user from session storage"); const user_json_str = sessionStorage.getItem('user'); return stringToNewUTF8(user_json_str); }
 function add_user_in_session_storage_js(user_json_cstr) { const user_json_utf_8 = UTF8ToString(user_json_cstr); console.log("Saving user in session storage"); console.log("Saving user ...", JSON.parse(user_json_utf_8)); sessionStorage.setItem('user', user_json_utf_8); console.log("User has been saved to storage"); }
 
@@ -7085,15 +7085,7 @@ var wasmImports = {
   /** @export */
   __assert_fail: ___assert_fail,
   /** @export */
-  __asyncjs__delete_post_in_indexed_db,
-  /** @export */
-  __asyncjs__edit_post_in_indexed_db,
-  /** @export */
-  __asyncjs__get_posts_from_indexed_db,
-  /** @export */
   __asyncjs__get_social_graph_from_indexed_db,
-  /** @export */
-  __asyncjs__save_post_in_indexed_db,
   /** @export */
   __asyncjs__save_user_graph_in_indexed_db,
   /** @export */
@@ -7147,6 +7139,10 @@ var wasmImports = {
   /** @export */
   clock_time_get: _clock_time_get,
   /** @export */
+  delete_post_in_indexed_db,
+  /** @export */
+  edit_post_in_indexed_db,
+  /** @export */
   emscripten_date_now: _emscripten_date_now,
   /** @export */
   emscripten_resize_heap: _emscripten_resize_heap,
@@ -7163,7 +7159,11 @@ var wasmImports = {
   /** @export */
   fd_write: _fd_write,
   /** @export */
-  get_user_in_session_storage_js
+  get_posts_from_indexed_db,
+  /** @export */
+  get_user_in_session_storage_js,
+  /** @export */
+  save_post_in_indexed_db
 };
 
 
