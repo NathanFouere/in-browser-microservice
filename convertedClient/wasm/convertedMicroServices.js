@@ -6876,6 +6876,7 @@ function get_posts_from_indexed_db() { const postsArray = Module.ydoc.getArray("
 function save_post_in_indexed_db(post_json_cstr) { console.log("debut save post in indexeddb"); const postsArray = Module.ydoc.getArray("posts"); const post_json_utf_8 = UTF8ToString(post_json_cstr); const post = JSON.parse(post_json_utf_8); postsArray.push([post]); }
 function get_user_in_session_storage_js() { console.log("Loading user from session storage"); const user_json_str = sessionStorage.getItem('user'); return stringToNewUTF8(user_json_str); }
 function add_user_in_session_storage_js(user_json_cstr) { const user_json_utf_8 = UTF8ToString(user_json_cstr); console.log("Saving user in session storage"); console.log("Saving user ...", JSON.parse(user_json_utf_8)); sessionStorage.setItem('user', user_json_utf_8); console.log("User has been saved to storage"); }
+function remove_user_in_session_storage_js() { console.log("Removing user from session storage"); sessionStorage.removeItem('user'); }
 
 // Imports from the Wasm binary.
 var ___getTypeName = makeInvalidEarlyAccess('___getTypeName');
@@ -7163,7 +7164,9 @@ var wasmImports = {
   /** @export */
   get_user_in_session_storage_js,
   /** @export */
-  save_post_in_indexed_db
+  save_post_in_indexed_db,
+  /** @export */
+  remove_user_in_session_storage_js
 };
 
 
