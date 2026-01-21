@@ -6868,8 +6868,8 @@ unexportedSymbols.forEach(unexportedRuntimeSymbol);
 function checkIncomingModuleAPI() {
   ignoredModuleProp('fetchSettings');
 }
-function __asyncjs__get_social_graph_from_indexed_db() { return Asyncify.handleAsync(async () => { const val = Module.ydoc.getArray("social_graph"); return stringToNewUTF8(JSON.stringify(val)); }); }
-function __asyncjs__save_user_graph_in_indexed_db(ug_json_cstr) { return Asyncify.handleAsync(async () => { const ug_json_utf_8 = UTF8ToString(ug_json_cstr); const updatedUg = JSON.parse(ug_json_utf_8); const ugArray = Module.ydoc.getArray("social_graph"); let idx = null; for (let i = 0; i < ugArray.length; i++) { if (ugArray.get(i).user_id == Number(updatedUg.user_id)) { idx = i; break; } } if (null != idx) { ugArray.delete(idx); ugArray.insert(idx, [updatedUg]); } else { ugArray.push([updatedUg]); } }); }
+function get_social_graph_from_indexed_db() { const val = Module.ydoc.getArray("social_graph"); return stringToNewUTF8(JSON.stringify(val)); }
+function save_user_graph_in_indexed_db(ug_json_cstr) { const ug_json_utf_8 = UTF8ToString(ug_json_cstr); const updatedUg = JSON.parse(ug_json_utf_8); const ugArray = Module.ydoc.getArray("social_graph"); let idx = null; for (let i = 0; i < ugArray.length; i++) { if (ugArray.get(i).user_id == Number(updatedUg.user_id)) { idx = i; break; } } if (null != idx) { ugArray.delete(idx); ugArray.insert(idx, [updatedUg]); } else { ugArray.push([updatedUg]); } }
 function edit_post_in_indexed_db(post_json_cstr) { const post_json_utf_8 = UTF8ToString(post_json_cstr); const updatedPost = JSON.parse(post_json_utf_8); console.log(updatedPost); const postsArray = Module.ydoc.getArray("posts"); let idxOfPost = null; for (let i = 0; i < postsArray.length; i++) { if (postsArray.get(i).post_id == Number(updatedPost.post_id)) { idxOfPost = i; break; } } if (null != idxOfPost) { postsArray.delete(idxOfPost); postsArray.insert(idxOfPost, [updatedPost]); } }
 function delete_post_in_indexed_db(post_id) { const postsArray = Module.ydoc.getArray("posts"); let idxOfPost = null; for (let i = 0; i < postsArray.length; i++) { if (postsArray.get(i).post_id == Number(post_id)) { idxOfPost = i; break; } } if (null != idxOfPost) { postsArray.delete(idxOfPost) } }
 function get_posts_from_indexed_db() { const postsArray = Module.ydoc.getArray("posts"); const allPosts = postsArray; return stringToNewUTF8(JSON.stringify(allPosts)); }
@@ -7086,10 +7086,6 @@ var wasmImports = {
   /** @export */
   __assert_fail: ___assert_fail,
   /** @export */
-  __asyncjs__get_social_graph_from_indexed_db,
-  /** @export */
-  __asyncjs__save_user_graph_in_indexed_db,
-  /** @export */
   __cxa_throw: ___cxa_throw,
   /** @export */
   _abort_js: __abort_js,
@@ -7162,11 +7158,15 @@ var wasmImports = {
   /** @export */
   get_posts_from_indexed_db,
   /** @export */
+  get_social_graph_from_indexed_db,
+  /** @export */
   get_user_in_session_storage_js,
+  /** @export */
+  remove_user_in_session_storage_js,
   /** @export */
   save_post_in_indexed_db,
   /** @export */
-  remove_user_in_session_storage_js
+  save_user_graph_in_indexed_db
 };
 
 
