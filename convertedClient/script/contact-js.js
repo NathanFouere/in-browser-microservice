@@ -69,6 +69,9 @@ function updateSocialGraphUI() {
 
       const followeeList = document.getElementById("followee-list");
       if (followeeList) followeeList.innerHTML = '<div class="alert alert-warning">Please log in to view followees.</div>';
+
+      const friendList = document.getElementById("friend-list");
+      if (friendList) friendList.innerHTML = '<div class="alert alert-warning">Please log in to view friends.</div>';
       return;
     }
 
