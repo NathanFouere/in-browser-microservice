@@ -27,7 +27,7 @@ function displayStatusMessage(containerId, message) {
 /**
  * Rendu d'une liste à partir d'un vecteur C++ (Wasm)
  */
-function renderListFromWasm(containerId, templateId, namesVector, emptyMessage) {
+function renderList(containerId, templateId, namesVector, emptyMessage) {
   const list = document.getElementById(containerId);
   const template = document.getElementById(templateId);
   if (!list || !template) return;
@@ -65,9 +65,9 @@ function updateSocialGraphUI() {
     }
 
     if (!username) {
-      ["follower-list", "followee-list", "friend-list"].forEach(id =>
-        displayStatusMessage(id, "Veuillez vous connecter pour voir vos contacts.")
-      );
+      displayStatusMessage("follower-list", "Veuillez vous connecter pour voir vos contacts.");
+      displayStatusMessage("followee-list", "Veuillez vous connecter pour voir vos contacts.");
+      displayStatusMessage("friend-list", "Veuillez vous connecter pour voir vos contacts.");
       return;
     }
 
@@ -80,14 +80,9 @@ function updateSocialGraphUI() {
     const friends = di.socialGraphHandler.GetFriendNames(username);
 
     // Rendu des listes
-    renderListFromWasm("follower-list", "follower-template", followers, "Vous n'avez aucun follower");
-    renderListFromWasm("followee-list", "followee-template", followees, "Vous ne suivez personne");
-    renderListFromWasm("friend-list", "friend-template", friends, "Vous n'avez aucun ami");
-
-    // Libération de la mémoire Wasm
-    followers.delete();
-    followees.delete();
-    friends.delete();
+    renderList("follower-list", "follower-template", followers, "Vous n'avez aucun follower");
+    renderList("followee-list", "followee-template", followees, "Vous ne suivez personne");
+    renderList("friend-list", "friend-template", friends, "Vous n'avez aucun ami");
 
   } catch (e) {
     console.error("Erreur mise à jour Social Graph:", e);
