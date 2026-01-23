@@ -230,12 +230,12 @@
 
         if (
             window.location.href.split("=")[1] == null ||
-            localStorage.getItem("username") == null
+            sessionStorage.getItem("user") == null
         ) {
             showTimeline("user-timeline");
         } else if (
-            localStorage
-                .getItem("username")
+            sessionStorage
+                .getItem("user")
                 .localeCompare(window.location.href.split("=")[1]) != 0
         ) {
             // Assuming show_Mentioned_User_Timeline is available globally or imported in profile-js.js

@@ -8,7 +8,7 @@
 using namespace emscripten;
 using nlohmann::json;
 
-EM_JS(void, edit_post_in_indexed_db, (const char *post_json_cstr), {
+EM_JS(void, edit_post_in_yjs, (const char *post_json_cstr), {
   const post_json_utf_8 = UTF8ToString(post_json_cstr);
   const updatedPost = JSON.parse(post_json_utf_8);
   console.log(updatedPost);
@@ -33,7 +33,7 @@ EM_JS(void, edit_post_in_indexed_db, (const char *post_json_cstr), {
   }
 });
 
-EM_JS(void, delete_post_in_indexed_db, (int64_t post_id), {
+EM_JS(void, delete_post_in_yjs, (int64_t post_id), {
   const postsArray = Module.ydoc.getArray("posts");
   let idxOfPost = null;
   for (let i = 0; i < postsArray.length; i++) {
@@ -49,7 +49,7 @@ EM_JS(void, delete_post_in_indexed_db, (int64_t post_id), {
   }
 });
 
-EM_JS(char *, get_posts_from_indexed_db, (), {
+EM_JS(char *, get_posts_from_yjs, (), {
   const postsArray = Module.ydoc.getArray("posts");
 
   const allPosts = postsArray;
@@ -57,8 +57,8 @@ EM_JS(char *, get_posts_from_indexed_db, (), {
   return stringToNewUTF8(JSON.stringify(allPosts));
 });
 
-EM_JS(void, save_post_in_indexed_db, (const char *post_json_cstr), {
-  console.log("debut save post in indexeddb");
+EM_JS(void, save_post_in_yjs, (const char *post_json_cstr), {
+  console.log("debut save post in yjs");
   const postsArray = Module.ydoc.getArray("posts");
   const post_json_utf_8 = UTF8ToString(post_json_cstr);
   const post = JSON.parse(post_json_utf_8);
@@ -66,9 +66,9 @@ EM_JS(void, save_post_in_indexed_db, (const char *post_json_cstr), {
 });
 
 PostStorageHandler::PostStorageHandler() {
-  auto postsFromIndexedDb = get_posts_from_indexed_db();
-  if (postsFromIndexedDb != nullptr) {
-    json postsJson = json::parse(postsFromIndexedDb);
+  auto postsFromYjs = get_posts_from_yjs();
+  if (postsFromYjs != nullptr) {
+    json postsJson = json::parse(postsFromYjs);
     for (json postJson : postsJson) {
       this->posts.push_back(Post::fromJson(postJson));
     }
@@ -101,7 +101,7 @@ void PostStorageHandler::EditPostText(int64_t post_id, std::string newText) {
   for (std::size_t i = 0; i < posts.size(); i++) {
     if (this->posts[i].post_id == post_id) {
       this->posts[i].setText(newText);
-      edit_post_in_indexed_db(this->posts[i].toJson().dump().c_str());
+      edit_post_in_yjs(this->posts[i].toJson().dump().c_str());
       return;
     }
   }
@@ -110,10 +110,10 @@ void PostStorageHandler::EditPostText(int64_t post_id, std::string newText) {
 void PostStorageHandler::DeletePost(int64_t post_id) {
   for (std::size_t i = 0; i < posts.size(); i++) {
     if (this->posts[i].post_id == post_id) {
-      std::cout << "delete_post_in_indexed_db" << "   "
-                << this->posts[i].post_id << std::endl;
+      std::cout << "delete_post_in_yjs" << "   " << this->posts[i].post_id
+                << std::endl;
 
-      delete_post_in_indexed_db(this->posts[i].post_id);
+      delete_post_in_yjs(this->posts[i].post_id);
       this->posts.erase(this->posts.begin() + i);
       return;
     }
@@ -131,7 +131,7 @@ Post *PostStorageHandler::GetPostById(int64_t post_id) {
 
 void PostStorageHandler::StorePost(const Post &post) {
   this->posts.push_back(post);
-  save_post_in_indexed_db(post.toJson().dump().c_str());
+  save_post_in_yjs(post.toJson().dump().c_str());
 }
 
 Post *PostStorageHandler::ReadPost(int64_t post_id) {
