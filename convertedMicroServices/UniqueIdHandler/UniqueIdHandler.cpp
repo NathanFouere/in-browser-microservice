@@ -5,7 +5,6 @@ using namespace emscripten;
 
 UniqueIdHandler::UniqueIdHandler(const std::string &machine_id) {
     _machine_id = machine_id;
-    std::cout << "UniqueIdHandler initialized with machine_id: " << machine_id << std::endl;
 }
 
 int64_t UniqueIdHandler::ComposeUniqueId() {

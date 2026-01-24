@@ -16,10 +16,6 @@ std::vector<Post> HomeTimelineHandler::ReadHomeTimeline(int64_t user_id,
 
   std::vector<Post> posts = this->postStorageHandler.GetAllPosts();
 
-  std::cout << "ReadHomeTimeline called. only_friends: " << only_friends
-            << std::endl;
-  std::cout << "ReadHomeTimeline: Total posts fetched from storage: "
-            << posts.size() << std::endl;
 
   if (only_friends) {
     std::vector<int64_t> followees =
@@ -31,8 +27,6 @@ std::vector<Post> HomeTimelineHandler::ReadHomeTimeline(int64_t user_id,
     allowed_ids.insert(friends.begin(), friends.end());
     allowed_ids.insert(user_id);
 
-    std::cout << "ReadHomeTimeline: Filtering. Allowed IDs count: "
-              << allowed_ids.size() << std::endl;
 
     std::vector<Post> filtered_posts;
     filtered_posts.reserve(posts.size());
@@ -43,8 +37,6 @@ std::vector<Post> HomeTimelineHandler::ReadHomeTimeline(int64_t user_id,
       }
     }
 
-    std::cout << "ReadHomeTimeline: Posts after filtering: "
-              << filtered_posts.size() << std::endl;
 
     std::vector<Post> paged_posts;
     for (size_t i = start_idx;

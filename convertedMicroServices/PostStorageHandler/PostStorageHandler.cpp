@@ -72,11 +72,6 @@ PostStorageHandler::PostStorageHandler() {
     for (json postJson : postsJson) {
       this->posts.push_back(Post::fromJson(postJson));
     }
-    std::cout << "PostStorageHandler: Loaded " << this->posts.size()
-              << " posts from DB." << std::endl;
-  } else {
-    std::cout << "PostStorageHandler: DB returned nullptr (empty)."
-              << std::endl;
   }
 }
 

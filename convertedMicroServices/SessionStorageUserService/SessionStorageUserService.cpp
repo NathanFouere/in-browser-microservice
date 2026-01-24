@@ -19,7 +19,6 @@ static User* loadUserFromJson(json j) {
 }
 
 EM_JS(char *, get_user_in_session_storage_js, (), {
-  console.log("Loading user from session storage");
 
   const user_json_str = sessionStorage.getItem('user');
 
@@ -43,7 +42,6 @@ EM_JS(void, add_user_in_session_storage_js, (const char *user_json_cstr), {
 });
 
 EM_JS(void, remove_user_in_session_storage_js, (), {
-  console.log("Removing user from session storage");
   sessionStorage.removeItem('user');
 });
 
