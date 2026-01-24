@@ -9,13 +9,26 @@ export default class ShardingService {
 
   handleAwarenessChange = ({ added, updated, removed }) => {
     const states = this.provider.awareness.getStates();
-
     added.forEach((clientID) => {
-      console.log("added :", clientID, states.get(clientID));
+      const clientState = states.get(clientID);
+      console.log("added :", clientID, clientState);
+
+      if (clientState?.user != undefined) {
+        console.log("username :", clientState.user.username);
+        console.log("userId :", clientState.user.userId);
+        console.log("clientId :", clientState.user.clientId);
+      }
     });
 
     updated.forEach((clientID) => {
-      console.log("updated :", clientID, states.get(clientID));
+      const clientState = states.get(clientID);
+      console.log("updated :", clientID, clientState);
+
+      if (clientState?.user != undefined) {
+        console.log("username :", clientState.user.username);
+        console.log("userId :", clientState.user.userId);
+        console.log("clientId :", clientState.user.clientId);
+      }
     });
 
     removed.forEach((clientID) => {

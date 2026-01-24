@@ -37,7 +37,8 @@ EM_JS(void, add_user_in_session_storage_js, (const char *user_json_cstr), {
 
   Module.provider.awareness.setLocalStateField('user', {
     username: username,
-    userId: userId
+    userId: userId,
+    clientId: Module.ydoc.clientID, // cf . https://docs.yjs.dev/api/about-awareness "The clientID is usually the ydoc.clientID."
   });
 });
 
