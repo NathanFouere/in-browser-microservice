@@ -26,20 +26,10 @@ EM_JS(char *, get_user_in_session_storage_js, (), {
 });
 
 EM_JS(void, add_user_in_session_storage_js, (const char *user_json_cstr), {
-  import * as Y from "yjs";
-
   const user_json_utf_8 = UTF8ToString(user_json_cstr);
   sessionStorage.setItem('user', user_json_utf_8);
 
   const userJson = JSON.parse(user_json_utf_8);
-  const username = userJson["username"];
-  const userId = userJson["userid"];
-
-  Module.provider.awareness.setLocalStateField('user', {
-    username: username,
-    userId: userId,
-    clientId: Module.ydoc.clientID, // cf . https://docs.yjs.dev/api/about-awareness "The clientID is usually the ydoc.clientID."
-  });
 });
 
 EM_JS(void, remove_user_in_session_storage_js, (), {

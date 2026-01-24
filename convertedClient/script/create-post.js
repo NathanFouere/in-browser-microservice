@@ -20,7 +20,6 @@ function uploadPost(media_json) {
       body,
       di.module.PostType.POST,
     );
-    window.location.reload();
   }
 }
 

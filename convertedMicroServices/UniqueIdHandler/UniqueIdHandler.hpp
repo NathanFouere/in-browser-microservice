@@ -33,9 +33,7 @@ static int GetCounter(int64_t timestamp) {
 class UniqueIdHandler {
     public:
         UniqueIdHandler(const std::string &machine_id);
-
-        int64_t ComposeUniqueId(
-        );
+        int ComposeUniqueId();
 
     private:
         std::string _machine_id;

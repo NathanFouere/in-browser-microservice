@@ -1,6 +1,6 @@
 export default class ShardingService {
-  constructor(ydoc, persistence, provider, annuaireService) {
-    this.ydoc = ydoc;
+  constructor(sharedDoc, persistence, provider, annuaireService) {
+    this.sharedDoc = sharedDoc;
     this.persistence = persistence;
     this.provider = provider;
     this.annuaireService = annuaireService;

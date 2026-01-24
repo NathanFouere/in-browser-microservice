@@ -8,14 +8,14 @@ using namespace emscripten;
 using nlohmann::json;
 
 EM_ASYNC_JS(char *, get_social_graph_from_indexed_db, (), {
-  const val = Module.ydoc.getArray("social_graph");
+  const val = Module.sharedDoc.getArray("social_graph");
   return stringToNewUTF8(JSON.stringify(val));
 });
 
 EM_ASYNC_JS(void, save_user_graph_in_indexed_db, (const char *ug_json_cstr), {
   const ug_json_utf_8 = UTF8ToString(ug_json_cstr);
   const updatedUg = JSON.parse(ug_json_utf_8);
-  const ugArray = Module.ydoc.getArray("social_graph");
+  const ugArray = Module.sharedDoc.getArray("social_graph");
 
   let idx = null;
   for (let i = 0; i < ugArray.length; i++) {
@@ -70,6 +70,10 @@ EM_ASYNC_JS(void, save_follow_in_indexed_cb, (const char* follow_id_str), {
     tx.oncomplete = resolve;
     tx.onerror = reject;
   });
+
+  // ici on s'ajoute au doc partagé
+
+  Module.createYdocAndRoom("tdodo", follow_id_str);
 });
 
 SocialGraphHandler::SocialGraphHandler() {

@@ -1,12 +1,15 @@
 import Module from "./wasm/convertedMicroServices.js";
-import { ydoc, persistence, provider } from "./script/yjs.js";
+import { sharedDoc, persistence, provider } from "./script/yjs.js";
 import ShardingService from "./script/sharding-service.js";
 import AnnuaireService from "./script/annuaire-service.js";
+import * as Y from "yjs";
+import { WebrtcProvider } from "y-webrtc";
+import { IndexeddbPersistence } from "y-indexeddb";
 
 var module = await Module();
 
 // sert à rendre disponible globalement dans le module emscripten
-module.ydoc = ydoc;
+module.sharedDoc = sharedDoc;
 module.persistence = persistence;
 module.provider = provider;
 
@@ -39,9 +42,9 @@ const composePostHandler = await new module.ComposePostHandler(
   homeTimelineHandler,
   postStorageHandler,
 );
-const annuaireService = new AnnuaireService(ydoc.clientID);
+const annuaireService = new AnnuaireService(sharedDoc.clientID);
 const shardingService = new ShardingService(
-  ydoc,
+  sharedDoc,
   persistence,
   provider,
   annuaireService,
@@ -58,7 +61,7 @@ const di = {
   composePostHandler: composePostHandler,
   homeTimelineHandler: homeTimelineHandler,
   sessionStorageUserService: sessionStorageUserService,
-  ydoc: ydoc,
+  sharedDoc: sharedDoc,
   shardingService: shardingService,
   annuaireService: annuaireService,
   module: module,
