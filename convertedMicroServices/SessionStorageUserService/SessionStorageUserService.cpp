@@ -27,12 +27,18 @@ EM_JS(char *, get_user_in_session_storage_js, (), {
 });
 
 EM_JS(void, add_user_in_session_storage_js, (const char *user_json_cstr), {
-  const user_json_utf_8 = UTF8ToString(user_json_cstr);
-  console.log("Saving user in session storage");
 
-  console.log("Saving user ...", JSON.parse(user_json_utf_8));
+  const user_json_utf_8 = UTF8ToString(user_json_cstr);
   sessionStorage.setItem('user', user_json_utf_8);
-  console.log("User has been saved to storage");
+
+  const userJson = JSON.parse(user_json_utf_8);
+  const username = userJson["username"];
+  const userId = userJson["userid"];
+
+  Module.provider.awareness.setLocalStateField('user', {
+    username: username,
+    userId: userId
+  });
 });
 
 EM_JS(void, remove_user_in_session_storage_js, (), {

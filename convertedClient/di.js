@@ -1,10 +1,13 @@
 import Module from "./wasm/convertedMicroServices.js";
-import ydoc from "./script/yjs.js";
+import { ydoc, persistence, provider } from "./script/yjs.js";
+import ShardingService from "./script/sharding-service.js";
 
 var module = await Module();
 
 // sert à rendre ydoc disponible globalement dans le module emscripten
 module.ydoc = ydoc;
+module.persistence = persistence;
+module.provider = provider;
 
 // TODO => tout regrouper dans un promise.all
 const uniqueIdHandler = await new module.UniqueIdHandler("abc");
@@ -35,6 +38,7 @@ const composePostHandler = await new module.ComposePostHandler(
   homeTimelineHandler,
   postStorageHandler,
 );
+const shardingService = new ShardingService(ydoc, persistence, provider);
 
 const di = {
   uniqueIdHandler: uniqueIdHandler,
@@ -49,6 +53,7 @@ const di = {
   homeTimelineHandler: homeTimelineHandler,
   sessionStorageUserService: sessionStorageUserService,
   ydoc: ydoc,
+  shardingService: shardingService,
   module: module,
 };
 
