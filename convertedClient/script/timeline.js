@@ -36,7 +36,7 @@ export default function showTimeline(type) {
     });
 
     // Clear current posts
-    cardBlock.innerHTML = "";
+    cardBlock.replaceChildren();
 
     for (const p of posts) {
       const date = new Date(Number(p.timestamp) * 1000);

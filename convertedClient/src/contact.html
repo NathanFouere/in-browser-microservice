@@ -80,7 +80,7 @@
             <div class="col-md-9 gedf-main">
 
                 <div>
-                    <h2>Add New Followee</h2>
+                    <h2>Follow a user</h2>
                 </div>
 
                 <div class="row">
@@ -88,7 +88,7 @@
                         <form class="follow-form">
                             <div class="form-group mb-3">
                                 <input type="text" class="form-control mb-2" id="followee-name" name="followee_name"
-                                    placeholder="type a user name to follow">
+                                    placeholder="type a user name or ID to follow">
                                 <input type="text" class="hide follow-username" id="user-name" name="user_name">
                                 <input type="submit" class="btn btn-md btn-primary" name="follow_type" value="Follow">
                             </div>
@@ -97,7 +97,7 @@
                 </div>
 
                 <div>
-                    <h2>Unfollow A Followee</h2>
+                    <h2>Unfollow a user</h2>
                 </div>
 
                 <div class="row">
@@ -105,7 +105,7 @@
                         <form class="follow-form">
                             <div class="form-group mb-3">
                                 <input type="text" class="form-control mb-2" id="followee-name" name="followee_name"
-                                    placeholder="type a user name to unfollow">
+                                    placeholder="type a user name or ID to unfollow">
                                 <input type="text" class="hide follow-username" name="user_name">
                                 <input type="submit" class="btn btn-md btn-primary" name="follow_type" value="Unfollow">
                             </div>
@@ -160,17 +160,48 @@
                     </div>
                 </div>
 
+                <div>
+                    <div>
+                        <h2>Friend List:</h2>
+                    </div>
+                    <div id="friend-list">
+                    </div>
+                </div>
+
 
             </div>
         </div>
     </div>
     </div>
-    <script type="module" src="../script/timeline.js"></script>
-    <script>
-        showUsername();
-    </script>
-    <script src="../script/get-follower.js"></script> <!-- existe pas => todo -->
-    <script src="../script/get-followee.js"></script> <!-- existe pas => todo -->
+
+    <!-- Templates for dynamic content -->
+    <template id="follower-template">
+        <div class="follower-div card gedf-card"
+            style="margin-bottom: 10px; border: 1px solid #ccc; background-color: #f8f9fa; border-radius: 5px;">
+            <div class="card-body" style="padding: 15px;">
+                <div class="h5 m-0 follower-id" style="color: #333; font-weight: bold;">Follower ID</div>
+            </div>
+        </div>
+    </template>
+
+    <template id="followee-template">
+        <div class="followee-div card gedf-card"
+            style="margin-bottom: 10px; border: 1px solid #ccc; background-color: #f8f9fa; border-radius: 5px;">
+            <div class="card-body" style="padding: 15px;">
+                <div class="h5 m-0 followee-id" style="color: #333; font-weight: bold;">Followee ID</div>
+            </div>
+        </div>
+    </template>
+
+    <template id="friend-template">
+        <div class="friend-div card gedf-card"
+            style="margin-bottom: 10px; border: 1px solid #ccc; background-color: #e0f7fa; border-radius: 5px;">
+            <div class="card-body" style="padding: 15px;">
+                <div class="h5 m-0 friend-id" style="color: #006064; font-weight: bold;">Friend ID</div>
+            </div>
+        </div>
+    </template>
+
     <script type="module" src="../script/contact-js.js"></script>
     <script type="text/javascript" src="./javascript/button-click.js"></script> <!-- existe pas => todo -->
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js"
