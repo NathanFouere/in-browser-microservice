@@ -30,15 +30,27 @@ function fillLoggedUser() {
   for (const user of users) {
     const clone = userTemplate.cloneNode(true);
     clone.style.display = "block";
-    clone.classList.remove("d-none");
-
     const usernameSpan = clone.querySelector(".username-span");
     if (usernameSpan) {
       usernameSpan.innerText = user.username;
     }
 
+    const btn = clone.querySelector(".log-user-btn");
+    if (btn) {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        onFollowLoggedUserButtonClick(user.userId);
+      });
+    }
     annuaireBlock.appendChild(clone);
   }
+}
+
+function onFollowLoggedUserButtonClick(userId) {
+  console.log("Clicked user id :", userId);
+  const userIdStr = String(userId);
+  const socialGraphHandler = di.socialGraphHandler;
+  socialGraphHandler.SaveFollow(userIdStr);
 }
 
 document.querySelectorAll(".follow-form").forEach((f) => {

@@ -5,7 +5,7 @@ import AnnuaireService from "./script/annuaire-service.js";
 
 var module = await Module();
 
-// sert à rendre ydoc disponible globalement dans le module emscripten
+// sert à rendre disponible globalement dans le module emscripten
 module.ydoc = ydoc;
 module.persistence = persistence;
 module.provider = provider;

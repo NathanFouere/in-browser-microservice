@@ -18,7 +18,6 @@ void UserHandler::RegisterUserWithId(const std::string &first_name,
                                      const std::string &password,
                                      const int64_t user_id) {
 
-  // TODO: Intégré persistence
   this->socialGraphHandler.InsertUser(user_id, username);
 }
 
@@ -28,7 +27,6 @@ void UserHandler::RegisterUser(const std::string &first_name,
                                const std::string &password) {
   int64_t user_id = this->uniqueIdHandler.ComposeUniqueId();
 
-  // TODO: Intégré persistence
   this->socialGraphHandler.InsertUser(user_id, username);
 }
 

@@ -33,7 +33,47 @@ EM_ASYNC_JS(void, save_user_graph_in_indexed_db, (const char *ug_json_cstr), {
   }
 });
 
+EM_ASYNC_JS(void, create_follow_structure_in_indexed_db, (), {
+  const db = await new Promise((resolve, reject) => {
+    const openRequest = indexedDB.open("store", 1);
+
+    openRequest.onupgradeneeded = (e) => {
+      const db = e.target.result;
+
+      if (!db.objectStoreNames.contains("follow")) {
+        db.createObjectStore("follow", {
+          keyPath: "userId"
+        });
+      }
+    };
+
+    openRequest.onsuccess = () => resolve(openRequest.result);
+    openRequest.onerror  = () => reject(openRequest.error);
+  });
+});
+
+EM_ASYNC_JS(void, save_follow_in_indexed_cb, (const char* follow_id_str), {
+  const userIdStr = UTF8ToString(follow_id_str);
+
+  const db = await new Promise((resolve, reject) => {
+    const openRequest = indexedDB.open("store", 1);
+    openRequest.onsuccess = () => resolve(openRequest.result);
+    openRequest.onerror  = () => reject(openRequest.error);
+  });
+
+  await new Promise((resolve, reject) => {
+    const tx = db.transaction("follow", "readwrite");
+    const store = tx.objectStore("follow");
+
+    store.put({ userId: userIdStr });
+
+    tx.oncomplete = resolve;
+    tx.onerror = reject;
+  });
+});
+
 SocialGraphHandler::SocialGraphHandler() {
+  create_follow_structure_in_indexed_db();
   auto jsonStr = get_social_graph_from_indexed_db();
   if (jsonStr != nullptr) {
     json j = json::parse(jsonStr);
@@ -81,6 +121,9 @@ std::vector<int64_t> SocialGraphHandler::GetFriends(const int64_t user_id) {
     return ug->friends;
   return {};
 }
+void SocialGraphHandler::SaveFollow(const std::string user_id) {
+    save_follow_in_indexed_cb(user_id.c_str());
+}
 
 void SocialGraphHandler::Follow(int64_t user_id, int64_t followee_id) {
   UserGraph *u = GetUserGraph(user_id);
@@ -119,6 +162,8 @@ void SocialGraphHandler::Follow(int64_t user_id, int64_t followee_id) {
     }
   }
 
+  std::cout << "User " << user_id << " followed " << followee_id
+            << (isMutual ? " (mutual friendship established)" : "") << std::endl;
   save_user_graph_in_indexed_db(u->toJson().dump().c_str());
   save_user_graph_in_indexed_db(f->toJson().dump().c_str());
 }
@@ -186,6 +231,7 @@ EMSCRIPTEN_BINDINGS(social_graph_module) {
       .function("GetFollowers", &SocialGraphHandler::GetFollowers)
       .function("GetFollowees", &SocialGraphHandler::GetFollowees)
       .function("GetFriends", &SocialGraphHandler::GetFriends)
+      .function("SaveFollow", &SocialGraphHandler::SaveFollow)
       .function("Follow", &SocialGraphHandler::Follow)
       .function("Unfollow", &SocialGraphHandler::Unfollow)
       .function("FollowWithUsername", &SocialGraphHandler::FollowWithUsername)
