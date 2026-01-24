@@ -39,7 +39,7 @@ const composePostHandler = await new module.ComposePostHandler(
   homeTimelineHandler,
   postStorageHandler,
 );
-const annuaireService = new AnnuaireService();
+const annuaireService = new AnnuaireService(ydoc.clientID);
 const shardingService = new ShardingService(
   ydoc,
   persistence,
