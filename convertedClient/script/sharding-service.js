@@ -1,8 +1,9 @@
 export default class ShardingService {
-  constructor(ydoc, persistence, provider) {
+  constructor(ydoc, persistence, provider, annuaireService) {
     this.ydoc = ydoc;
     this.persistence = persistence;
     this.provider = provider;
+    this.annuaireService = annuaireService;
 
     this.provider.awareness.on("change", this.handleAwarenessChange);
   }
@@ -14,9 +15,11 @@ export default class ShardingService {
       console.log("added :", clientID, clientState);
 
       if (clientState?.user != undefined) {
-        console.log("username :", clientState.user.username);
-        console.log("userId :", clientState.user.userId);
-        console.log("clientId :", clientState.user.clientId);
+        this.annuaireService.addLoggedUser(
+          clientState.user.userId,
+          clientState.user.username,
+          clientState.user.clientId,
+        );
       }
     });
 
@@ -25,14 +28,21 @@ export default class ShardingService {
       console.log("updated :", clientID, clientState);
 
       if (clientState?.user != undefined) {
-        console.log("username :", clientState.user.username);
-        console.log("userId :", clientState.user.userId);
-        console.log("clientId :", clientState.user.clientId);
+        this.annuaireService.addLoggedUser(
+          clientState.user.userId,
+          clientState.user.username,
+          clientState.user.clientId,
+        );
       }
     });
 
     removed.forEach((clientID) => {
       console.log("removed :", clientID);
+      const clientState = states.get(clientID);
+
+      if (clientState?.user != undefined) {
+        this.annuaireService.removeLoggedUser(clientState.user.userId);
+      }
     });
   };
 }

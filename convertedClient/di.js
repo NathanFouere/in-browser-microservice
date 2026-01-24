@@ -1,6 +1,7 @@
 import Module from "./wasm/convertedMicroServices.js";
 import { ydoc, persistence, provider } from "./script/yjs.js";
 import ShardingService from "./script/sharding-service.js";
+import AnnuaireService from "./script/annuaire-service.js";
 
 var module = await Module();
 
@@ -38,8 +39,13 @@ const composePostHandler = await new module.ComposePostHandler(
   homeTimelineHandler,
   postStorageHandler,
 );
-const shardingService = new ShardingService(ydoc, persistence, provider);
-
+const annuaireService = new AnnuaireService();
+const shardingService = new ShardingService(
+  ydoc,
+  persistence,
+  provider,
+  annuaireService,
+);
 const di = {
   uniqueIdHandler: uniqueIdHandler,
   mediaHandler: mediaHandler,
@@ -54,6 +60,7 @@ const di = {
   sessionStorageUserService: sessionStorageUserService,
   ydoc: ydoc,
   shardingService: shardingService,
+  annuaireService: annuaireService,
   module: module,
 };
 
