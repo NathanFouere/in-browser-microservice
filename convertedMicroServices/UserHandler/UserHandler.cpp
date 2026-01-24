@@ -57,7 +57,7 @@ bool UserHandler::Login(const std::string &username,
                         const std::string &password) {
   std::cout << "UserHandler donné with username: " << username << std::endl;
 
-  User *user = new User(1,        // TODO tmp
+  User *user = new User(this->uniqueIdHandler.ComposeUniqueId(),        // TODO tmp
                         username, // TODO tmp
                         username, // TODO tmp
                         username, // TODO tmp
