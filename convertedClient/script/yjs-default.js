@@ -1,17 +1,15 @@
 import * as Y from "yjs";
 import { WebrtcProvider } from "y-webrtc";
 import { IndexeddbPersistence } from "y-indexeddb";
+import { signalingServerIp, sharedDocName, sharedRoomName } from "./consts";
 
 const sharedDoc = new Y.Doc();
-const docName = "shared-doc";
 // clients connected to the same room-name share document updates
 
-const signalingServerIp = "192.168.1.18"; // TODO => il faut le définir à chaque fois !
-
-const provider = new WebrtcProvider("shared-room", sharedDoc, {
+const provider = new WebrtcProvider(sharedRoomName, sharedDoc, {
   signaling: ["ws://" + signalingServerIp + ":4444"],
 });
 
-const persistence = new IndexeddbPersistence(docName, sharedDoc);
+const persistence = new IndexeddbPersistence(sharedDocName, sharedDoc);
 
 export { sharedDoc, persistence, provider };

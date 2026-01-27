@@ -1,23 +1,36 @@
 import Module from "./wasm/convertedMicroServices.js";
-import { sharedDoc, persistence, provider } from "./script/yjs.js";
+import { sharedDoc, persistence, provider } from "./script/yjs-default.js";
 import ShardingService from "./script/sharding-service.js";
 import AnnuaireService from "./script/annuaire-service.js";
 import * as Y from "yjs";
 import { WebrtcProvider } from "y-webrtc";
 import { IndexeddbPersistence } from "y-indexeddb";
+import { sendFriendRequest, createYdocAndRoom } from "./script/utils.js";
+import { sharedRoomName } from "./script/consts";
 
 var module = await Module();
 
 // sert à rendre disponible globalement dans le module emscripten
 module.sharedDoc = sharedDoc;
-module.persistence = persistence;
-module.provider = provider;
+module.mainPersistence = persistence;
+module.mainProvider = provider;
+module.sendFriendRequest = sendFriendRequest;
+module.createYdocAndRoom = createYdocAndRoom;
+
+module.connections = {};
+module.connections[sharedRoomName] = {
+  doc: sharedDoc,
+  provider: provider,
+  persistence: persistence,
+};
 
 // TODO => tout regrouper dans un promise.all
 const uniqueIdHandler = await new module.UniqueIdHandler("abc");
 const mediaHandler = await new module.MediaHandler();
-const socialGraphHandler = await new module.SocialGraphHandler();
 const sessionStorageUserService = await new module.SessionStorageUserService();
+const socialGraphHandler = await new module.SocialGraphHandler(
+  sessionStorageUserService,
+);
 const userHandler = await new module.UserHandler(
   socialGraphHandler,
   uniqueIdHandler,
@@ -48,6 +61,8 @@ const shardingService = new ShardingService(
   persistence,
   provider,
   annuaireService,
+  module,
+  sessionStorageUserService,
 );
 const di = {
   uniqueIdHandler: uniqueIdHandler,

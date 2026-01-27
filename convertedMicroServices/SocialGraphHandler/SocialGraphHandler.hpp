@@ -5,6 +5,7 @@
 #include <vector>
 
 #include <nlohmann/json.hpp>
+#include "../SessionStorageUserService/SessionStorageUserService.hpp"
 
 using nlohmann::json;
 
@@ -40,13 +41,13 @@ struct UserGraph {
 
 class SocialGraphHandler {
 public:
-  SocialGraphHandler();
+  SocialGraphHandler(SessionStorageUserService& sessionStorageUserService);
   void InsertUser(int64_t, std::string);
   std::vector<int64_t> GetFollowers(const int64_t user_id);
   std::vector<int64_t> GetFollowees(const int64_t user_id);
   std::vector<int64_t> GetFriends(const int64_t user_id);
   void Follow(int64_t user_id, int64_t followee_id);
-  void SaveFollow(const std::string user_id);
+  void SaveFollow(const std::string user_id, const std::string username);
   void Unfollow(int64_t user_id, int64_t followee_id);
   void FollowWithUsername(const std::string &user_name,
                           const std::string &followee_name);
@@ -55,5 +56,6 @@ public:
 
 private:
   std::vector<UserGraph> social_graph;
+  SessionStorageUserService& sessionStorageUserService;
   UserGraph *GetUserGraph(int64_t user_id);
 };

@@ -33,51 +33,16 @@ EM_ASYNC_JS(void, save_user_graph_in_indexed_db, (const char *ug_json_cstr), {
   }
 });
 
-EM_ASYNC_JS(void, create_follow_structure_in_indexed_db, (), {
-  const db = await new Promise((resolve, reject) => {
-    const openRequest = indexedDB.open("store", 1);
+EM_JS(void, save_follow_in_indexed_cb, (const char* cur_user_name, const char* cur_user_id, const char* follow_id_str, const char* follow_username), {
+  const curUserIdStr = UTF8ToString(cur_user_id);
+  const curUserNameStr = UTF8ToString(cur_user_name);
+  const followIdStr = UTF8ToString(follow_id_str);
+  const followUsernameStr = UTF8ToString(follow_username);
 
-    openRequest.onupgradeneeded = (e) => {
-      const db = e.target.result;
-
-      if (!db.objectStoreNames.contains("follow")) {
-        db.createObjectStore("follow", {
-          keyPath: "userId"
-        });
-      }
-    };
-
-    openRequest.onsuccess = () => resolve(openRequest.result);
-    openRequest.onerror  = () => reject(openRequest.error);
-  });
+  Module.sendFriendRequest(curUserNameStr, curUserIdStr, followIdStr, followUsernameStr);
 });
 
-EM_ASYNC_JS(void, save_follow_in_indexed_cb, (const char* follow_id_str), {
-  const userIdStr = UTF8ToString(follow_id_str);
-
-  const db = await new Promise((resolve, reject) => {
-    const openRequest = indexedDB.open("store", 1);
-    openRequest.onsuccess = () => resolve(openRequest.result);
-    openRequest.onerror  = () => reject(openRequest.error);
-  });
-
-  await new Promise((resolve, reject) => {
-    const tx = db.transaction("follow", "readwrite");
-    const store = tx.objectStore("follow");
-
-    store.put({ userId: userIdStr });
-
-    tx.oncomplete = resolve;
-    tx.onerror = reject;
-  });
-
-  // ici on s'ajoute au doc partagé
-
-  Module.createYdocAndRoom("tdodo", follow_id_str);
-});
-
-SocialGraphHandler::SocialGraphHandler() {
-  create_follow_structure_in_indexed_db();
+SocialGraphHandler::SocialGraphHandler(SessionStorageUserService& sessionStorageUserService): sessionStorageUserService(sessionStorageUserService)  {
   auto jsonStr = get_social_graph_from_indexed_db();
   if (jsonStr != nullptr) {
     json j = json::parse(jsonStr);
@@ -125,8 +90,9 @@ std::vector<int64_t> SocialGraphHandler::GetFriends(const int64_t user_id) {
     return ug->friends;
   return {};
 }
-void SocialGraphHandler::SaveFollow(const std::string user_id) {
-    save_follow_in_indexed_cb(user_id.c_str());
+void SocialGraphHandler::SaveFollow(const std::string user_id, const std::string username) {
+    auto loggedUser = this->sessionStorageUserService.getLoggedUser();
+    save_follow_in_indexed_cb(loggedUser.getUsername().c_str(), std::to_string(loggedUser.getUserId()).c_str(), user_id.c_str(), username.c_str());
 }
 
 void SocialGraphHandler::Follow(int64_t user_id, int64_t followee_id) {
@@ -230,7 +196,7 @@ void SocialGraphHandler::UnfollowWithUsername(
 
 EMSCRIPTEN_BINDINGS(social_graph_module) {
   class_<SocialGraphHandler>("SocialGraphHandler")
-      .constructor<>()
+      .constructor<SessionStorageUserService &>()
       .function("InsertUser", &SocialGraphHandler::InsertUser)
       .function("GetFollowers", &SocialGraphHandler::GetFollowers)
       .function("GetFollowees", &SocialGraphHandler::GetFollowees)

@@ -14,6 +14,7 @@ function uploadPost(media_json) {
   if (document.getElementById("post-content").value !== "") {
     var body = document.getElementById("post-content").value;
     const loggedUser = di.sessionStorageUserService.getLoggedUser();
+    console.log("Creating post for user: ", loggedUser);
     di.composePostHandler.ComposePost(
       loggedUser.username,
       loggedUser.userid,

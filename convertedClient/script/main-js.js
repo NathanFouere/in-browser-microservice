@@ -16,45 +16,15 @@ function followHandler(event) {
   di.socialGraphHandler.FollowWithUsername(username, follweeeName);
 }
 
-function createYdocAndRoom(username, userId) {
-  const newDoc = new Y.Doc();
-  const signalingServerIp = "192.168.1.18"; // TODO => il faut le définir à chaque fois !
-
-  const provider = new WebrtcProvider(userId.toString(), newDoc, {
-    signaling: ["ws://" + signalingServerIp + ":4444"],
-  });
-
-  const persistence = new IndexeddbPersistence(userId.toString(), newDoc);
-
-  provider.awareness.setLocalStateField("user", {
-    username: username,
-    userId: userId.toString(),
-    clientId: newDoc.clientID, // cf . https://docs.yjs.dev/api/about-awareness "The clientID is usually the ydoc.clientID."
-  });
-
-  if (di.module.connections == undefined) {
-    di.module.connections = {};
-  }
-  di.module.connections[userId] = {
-    doc: newDoc,
-    provider: provider,
-    persistence: persistence,
-  };
-}
-
 const button = document.getElementById("synchro");
 
 button.addEventListener("click", (event) => {
-  const loggedUser = di.sessionStorageUserService.getLoggedUser();
-  console.log("logged user :", loggedUser.userid);
-  createYdocAndRoom(loggedUser.username, loggedUser.userid);
+  di.postStorageHandler.ShowPostsPresence();
 });
 
 function fillLoggedUser() {
   const annuaireService = di.annuaireService;
   const users = annuaireService.getListOfUsers();
-
-  console.log("users in annuaire :", users);
 
   const annuaireBlock = document.getElementById("annuaire-block");
   const userTemplate = document.getElementById("logged-user-template");
@@ -76,18 +46,17 @@ function fillLoggedUser() {
     if (btn) {
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
-        onFollowLoggedUserButtonClick(user.userId);
+        onFollowLoggedUserButtonClick(user.userId, user.username);
       });
     }
     annuaireBlock.appendChild(clone);
   }
 }
 
-function onFollowLoggedUserButtonClick(userId) {
-  console.log("Clicked user id :", userId);
+function onFollowLoggedUserButtonClick(userId, username) {
   const userIdStr = String(userId);
-  const socialGraphHandler = di.socialGraphHandler;
-  socialGraphHandler.SaveFollow(userIdStr);
+  const usernameStr = String(username);
+  di.socialGraphHandler.SaveFollow(userIdStr, usernameStr);
 }
 
 document.querySelectorAll(".follow-form").forEach((f) => {

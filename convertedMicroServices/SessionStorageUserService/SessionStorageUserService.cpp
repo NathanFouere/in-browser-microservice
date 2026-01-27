@@ -30,6 +30,17 @@ EM_JS(void, add_user_in_session_storage_js, (const char *user_json_cstr), {
   sessionStorage.setItem('user', user_json_utf_8);
 
   const userJson = JSON.parse(user_json_utf_8);
+
+  const username = userJson["username"];
+
+
+  const userId = userJson["userid"];
+
+  Module.mainProvider.awareness.setLocalStateField('user', {
+    username: username,
+    userId: userId,
+    clientId: Module.sharedDoc.clientID, // cf . https://docs.yjs.dev/api/about-awareness "The clientID is usually the ydoc.clientID."
+  });
 });
 
 EM_JS(void, remove_user_in_session_storage_js, (), {

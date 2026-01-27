@@ -27,7 +27,7 @@ class User {
   const std::string& getPasswordHashed() const;
   const std::string& getSalt() const;
   json toJson() const;
-  
+
   private:
     int64_t userid;
     std::string first_name;

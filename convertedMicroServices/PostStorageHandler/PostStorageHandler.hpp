@@ -16,6 +16,7 @@ class PostStorageHandler {
         Post* GetPostById(int64_t post_id);
         std::vector<Post> GetPostsBetweenIdx(int start_idx, int stop_idx) const;
         void EditPostText(int64_t post_id, std::string newText);
+        void ShowPostsPresence();
     private:
         std::vector<Post> posts;
 };
