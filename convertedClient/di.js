@@ -22,6 +22,7 @@ module.connections[sharedRoomName] = {
   doc: sharedDoc,
   provider: provider,
   persistence: persistence,
+  is_main: true,
 };
 
 // TODO => tout regrouper dans un promise.all

@@ -51,6 +51,10 @@ EM_JS(char *, get_posts_from_indexed_db, (), {
     console.log("connection for userid" + userId);
     const entry = Module.connections[userId];
     if (!entry || !entry.doc) continue;
+    // TODO => tmp
+    if(connection.is_main == true) {
+        continue;
+    }
 
     const postsArray = entry.doc.getArray("posts");
 
@@ -73,7 +77,12 @@ EM_JS(void, save_post_in_indexed_db, (const char *post_json_cstr), {
 
   for (const userId in Module.connections) {
     const connection = Module.connections[userId];
+
     if (!connection || !connection.doc) continue;
+    // TODO => tmp
+    if(connection.is_main == true) {
+        continue;
+    }
 
     const postsArray = connection.doc.getArray("posts");
     postsArray.push([post]);

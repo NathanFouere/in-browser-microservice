@@ -34,6 +34,10 @@ export default class ShardingService {
         const myUserId = this.sessionStorageUserService.getLoggedUser().userid;
 
         if (clientState.friend_request.targeted_user_id == String(myUserId)) {
+          console.log(
+            "Received friend request from ",
+            clientState.friend_request.source_username,
+          );
           this.module.createYdocAndRoom(
             clientState.friend_request.roomId,
             clientState.friend_request.targeted_user_name,
@@ -58,6 +62,10 @@ export default class ShardingService {
       if (clientState?.friend_request != undefined) {
         const myUserId = this.sessionStorageUserService.getLoggedUser().userid;
         if (clientState.friend_request.targeted_user_id == String(myUserId)) {
+          console.log(
+            "Received friend request from ",
+            clientState.friend_request.source_username,
+          );
           this.module.createYdocAndRoom(
             clientState.friend_request.roomId,
             clientState.friend_request.targeted_user_name,
