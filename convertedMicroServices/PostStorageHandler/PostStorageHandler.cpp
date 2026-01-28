@@ -52,7 +52,7 @@ EM_JS(char *, get_posts_from_indexed_db, (), {
     const entry = Module.connections[userId];
     if (!entry || !entry.doc) continue;
     // TODO => tmp
-    if(connection.is_main == true) {
+    if(entry.is_main == true) {
         continue;
     }
 
