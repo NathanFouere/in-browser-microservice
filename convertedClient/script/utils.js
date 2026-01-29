@@ -52,6 +52,9 @@ function createYdocAndRoom(roomId, cur_username, cur_user_id, userId) {
     provider: provider,
     persistence: persistence,
   };
+
+  console.log("Created new Y.Doc and room for userId:", userId);
+  console.log(di.module.connections);
 }
 
 export { sendFriendRequest, createYdocAndRoom };
