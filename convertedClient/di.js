@@ -1,12 +1,19 @@
 import Module from "./wasm/convertedMicroServices.js";
-import { sharedDoc, persistence, provider } from "./script/yjs-default.js";
+import {
+  sharedDoc,
+  persistence,
+  provider,
+  personnalDoc,
+  personnalPersistence,
+  personnalProvider,
+} from "./script/yjs-default.js";
 import ShardingService from "./script/sharding-service.js";
 import AnnuaireService from "./script/annuaire-service.js";
 import * as Y from "yjs";
 import { WebrtcProvider } from "y-webrtc";
 import { IndexeddbPersistence } from "y-indexeddb";
 import { sendFriendRequest, createYdocAndRoom } from "./script/utils.js";
-import { sharedRoomName } from "./script/consts";
+import { sharedRoomName, personnalRoomName } from "./script/consts";
 
 var module = await Module();
 
@@ -24,7 +31,6 @@ module.connections[sharedRoomName] = {
   persistence: persistence,
   is_main: true,
 };
-
 // TODO => tout regrouper dans un promise.all
 const uniqueIdHandler = await new module.UniqueIdHandler("abc");
 const mediaHandler = await new module.MediaHandler();

@@ -52,6 +52,11 @@ EM_JS(char *, get_posts_from_indexed_db, (), {
     const entry = Module.connections[userId];
     if (!entry || !entry.doc) continue;
     // TODO => tmp
+    if (entry.is_main == true) {
+        continue;
+    }
+
+
 
     const postsArray = entry.doc.getArray("posts");
 
@@ -69,6 +74,7 @@ EM_JS(char *, get_posts_from_indexed_db, (), {
 EM_JS(void, save_post_in_indexed_db, (const char *post_json_cstr), {
   const post = JSON.parse(UTF8ToString(post_json_cstr));
 
+  console.log("Module connections", Object.keys(Module.connections).length);
   if (!Module.connections) {
       return;
   }
@@ -78,6 +84,10 @@ EM_JS(void, save_post_in_indexed_db, (const char *post_json_cstr), {
     const connection = Module.connections[userId];
 
     if (!connection || !connection.doc) continue;
+
+    if (connection.is_main == true) {
+        continue;
+    }
 
     const postsArray = connection.doc.getArray("posts");
     postsArray.push([post]);
