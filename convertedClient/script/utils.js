@@ -24,6 +24,13 @@ function sendFriendRequest(
     clientId: newDoc.clientID, // cf . https://docs.yjs.dev/api/about-awareness "The clientID is usually the ydoc.clientID."
   });
 
+  di.module.connections[follow_id] = {
+    doc: newDoc,
+    provider: provider,
+    persistence: persistence,
+  };
+  console.log(di.module.connections);
+
   di.module.mainProvider.awareness.setLocalStateField("friend_request", {
     targeted_user_id: follow_id,
     targeted_user_name: follow_username.toString(),
