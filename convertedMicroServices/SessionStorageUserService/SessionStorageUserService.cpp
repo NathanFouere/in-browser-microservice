@@ -36,6 +36,8 @@ EM_JS(void, add_user_in_session_storage_js, (const char *user_json_cstr), {
 
   const userId = userJson["userid"];
 
+  console.log("Adding user to awareness: ", username, userId);
+  console.log("Module.sharedDoc.clientID: ", Module.mainProvider);
   Module.mainProvider.awareness.setLocalStateField('user', {
     username: username,
     userId: userId,
