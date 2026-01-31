@@ -52,7 +52,7 @@ const composePostHandler = await new module.ComposePostHandler(
   homeTimelineHandler,
   postStorageHandler,
 );
-const annuaireService = new AnnuaireService(sharedDoc.clientID);
+const annuaireService = new AnnuaireService(sharedDoc.clientID, provider);
 const shardingService = new ShardingService(
   sharedDoc,
   persistence,

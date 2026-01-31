@@ -58,8 +58,6 @@ async function createYdocAndRoom(
   module,
 ) {
   const newDoc = new Y.Doc();
-
-  // ATTENDRE la persistence avant de continuer
   const persistence = new IndexeddbPersistence(roomId, newDoc);
 
   await persistence.whenSynced.then(() => {
