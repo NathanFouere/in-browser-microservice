@@ -74,6 +74,14 @@ async function createYdocAndRoom(
     clientId: newDoc.clientID,
   });
 
+  const postsArray = newDoc.getArray("posts");
+  postsArray.observe((event) => {
+    if (event.transaction.origin !== null) {
+      console.log("Ajout d'un post distant");
+
+      newDoc.transact(() => {});
+    }
+  });
   module.connections[userId] = {
     doc: newDoc,
     provider: provider,

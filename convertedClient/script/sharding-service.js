@@ -33,7 +33,6 @@ export default class ShardingService {
       }
 
       if (clientState?.annuaire != undefined) {
-        console.log("Processing annuaire state from client:", clientID);
         const users = clientState.annuaire.users;
         users.forEach((user) => {
           this.annuaireService.addLoggedUser(
@@ -52,7 +51,7 @@ export default class ShardingService {
             "Received friend request from ",
             clientState.friend_request.source_username,
           );
-          // ATTENDRE la création du document
+
           await this.module.createYdocAndRoom(
             clientState.friend_request.roomId,
             clientState.friend_request.targeted_user_name,
@@ -77,7 +76,6 @@ export default class ShardingService {
       }
 
       if (clientState?.annuaire != undefined) {
-        console.log("Processing annuaire state from client:", clientID);
         const users = clientState.annuaire.users;
         users.forEach((user) => {
           this.annuaireService.addLoggedUser(
