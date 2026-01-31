@@ -1,7 +1,14 @@
 import * as Y from "yjs";
 import { WebrtcProvider } from "y-webrtc";
 import { IndexeddbPersistence } from "y-indexeddb";
+import di from "../di.js";
 
+import {
+  signalingServerIp,
+  sharedDocName,
+  sharedRoomName,
+  personnalRoomName,
+} from "./consts";
 async function sendFriendRequest(
   cur_user_name,
   cur_user_id,
