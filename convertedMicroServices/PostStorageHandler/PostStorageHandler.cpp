@@ -56,8 +56,6 @@ EM_JS(char *, get_posts_from_indexed_db, (), {
         continue;
     }
 
-
-
     const postsArray = entry.doc.getArray("posts");
 
     for (const post of postsArray.toArray()) {
@@ -68,8 +66,6 @@ EM_JS(char *, get_posts_from_indexed_db, (), {
   console.log("posts in index" + aggregatedPosts.length + " " + JSON.stringify(aggregatedPosts));
   return stringToNewUTF8(JSON.stringify(aggregatedPosts));
 });
-
-
 
 EM_JS(void, save_post_in_indexed_db, (const char *post_json_cstr), {
   const post = JSON.parse(UTF8ToString(post_json_cstr));

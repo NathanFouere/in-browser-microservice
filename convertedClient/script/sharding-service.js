@@ -45,6 +45,7 @@ export default class ShardingService {
             clientState.friend_request.targeted_user_name,
             clientState.friend_request.targeted_user_id,
             clientState.friend_request.source_user_id,
+            this.module,
           );
         }
       }
@@ -74,6 +75,7 @@ export default class ShardingService {
             clientState.friend_request.targeted_user_name,
             clientState.friend_request.targeted_user_id,
             clientState.friend_request.source_user_id,
+            this.module,
           );
         }
       }

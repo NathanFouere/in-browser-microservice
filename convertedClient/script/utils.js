@@ -50,7 +50,13 @@ async function sendFriendRequest(
   });
 }
 
-async function createYdocAndRoom(roomId, cur_username, cur_user_id, userId) {
+async function createYdocAndRoom(
+  roomId,
+  cur_username,
+  cur_user_id,
+  userId,
+  module,
+) {
   const newDoc = new Y.Doc();
 
   // ATTENDRE la persistence avant de continuer
@@ -70,7 +76,7 @@ async function createYdocAndRoom(roomId, cur_username, cur_user_id, userId) {
     clientId: newDoc.clientID,
   });
 
-  di.module.connections[userId] = {
+  module.connections[userId] = {
     doc: newDoc,
     provider: provider,
     persistence: persistence,

@@ -10,6 +10,7 @@ public:
   User *getUserInLocalStorage();
   void setLoggedUser(User user);
   void removeLoggedUser();
+  User* getNullableLoggedUser();
 
 private:
   std::unique_ptr<User> loggedUser;

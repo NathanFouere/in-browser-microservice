@@ -61,6 +61,7 @@ const shardingService = new ShardingService(
   module,
   sessionStorageUserService,
 );
+
 const di = {
   uniqueIdHandler: uniqueIdHandler,
   mediaHandler: mediaHandler,

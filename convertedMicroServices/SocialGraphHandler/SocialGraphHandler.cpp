@@ -7,9 +7,85 @@
 using namespace emscripten;
 using nlohmann::json;
 
-EM_ASYNC_JS(char *, get_social_graph_from_indexed_db, (), {
-  const val = Module.sharedDoc.getArray("social_graph");
-  return stringToNewUTF8(JSON.stringify(val));
+
+EM_ASYNC_JS(void, recreate_friends_documents, (const char* cur_user_name, const char* cur_user_id), {
+
+  const myUsername = UTF8ToString(cur_user_name);
+  const myUserId = UTF8ToString(cur_user_id);
+
+  const db = await new Promise((resolve, reject) => {
+    const openRequest = indexedDB.open("store", 2);
+    openRequest.onsuccess = () => resolve(openRequest.result);
+    openRequest.onerror  = () => reject(openRequest.error);
+  });
+
+  const friends = await new Promise((resolve, reject) => {
+    const tx = db.transaction("friends", "readonly");
+    const store = tx.objectStore("friends");
+    const req = store.getAll();
+
+    req.onsuccess = () => resolve(req.result ?? []);
+    req.onerror   = () => reject(req.error);
+  });
+
+  if (!friends || !friends.length) {
+    console.log("No friends found in IndexedDB");
+    return;
+  }
+
+  console.log("Recreating Yjs documents for friends:", friends);
+
+  for (const friend of friends) {
+    const friendId = String(friend.friend_id);
+    const friendUsername = friend.friend_username;
+
+    if (Module.module?.connections?.[friendId]) {
+      continue;
+    }
+
+    const roomId = myUserId + "-" + friendId;
+
+    try {
+      await Module.createYdocAndRoom(
+        roomId,
+        myUsername,
+        myUserId,
+        friendId,
+        Module,
+      );
+
+      console.log("Restored room:", roomId, "with", friendUsername);
+    } catch (err) {
+      console.error("Failed to recreate room for friend", friendId, err);
+    }
+  }
+});
+
+EM_ASYNC_JS(void, create_friends_structure_in_indexed_db, (), {
+  const db = await new Promise((resolve, reject) => {
+    const openRequest = indexedDB.open("store", 2);
+
+    openRequest.onupgradeneeded = () => {
+      const db = openRequest.result;
+
+      if (!db.objectStoreNames.contains("friends")) {
+        const store = db.createObjectStore("friends", { keyPath: "friend_id" });
+        store.createIndex("friend_id", "friend_id", { unique: true });
+        store.createIndex("friend_username", "friend_username", { unique: false });
+      }
+    };
+
+    openRequest.onsuccess = () => resolve(openRequest.result);
+    openRequest.onerror  = () => reject(openRequest.error);
+  });
+
+  await new Promise((resolve, reject) => {
+    const tx = db.transaction("friends", "readonly");
+    const store = tx.objectStore("friends");
+    const req = store.getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror   = () => reject(req.error);
+  });
 });
 
 EM_ASYNC_JS(void, save_user_graph_in_indexed_db, (const char *ug_json_cstr), {
@@ -33,23 +109,52 @@ EM_ASYNC_JS(void, save_user_graph_in_indexed_db, (const char *ug_json_cstr), {
   }
 });
 
-EM_JS(void, save_follow_in_indexed_cb, (const char* cur_user_name, const char* cur_user_id, const char* follow_id_str, const char* follow_username), {
-  const curUserIdStr = UTF8ToString(cur_user_id);
-  const curUserNameStr = UTF8ToString(cur_user_name);
-  const followIdStr = UTF8ToString(follow_id_str);
-  const followUsernameStr = UTF8ToString(follow_username);
 
-  Module.sendFriendRequest(curUserNameStr, curUserIdStr, followIdStr, followUsernameStr);
+EM_ASYNC_JS(void, save_follow_in_indexed_cb,
+  (const char* cur_user_name,
+   const char* cur_user_id,
+   const char* follow_id_str,
+   const char* follow_username), {
+
+  const curUserId = Number(UTF8ToString(cur_user_id));
+  const curUserName = UTF8ToString(cur_user_name);
+  const friendId = Number(UTF8ToString(follow_id_str));
+  const friendUsername = UTF8ToString(follow_username);
+
+  const db = await new Promise((resolve, reject) => {
+    const openRequest = indexedDB.open("store", 2);
+    openRequest.onsuccess = () => resolve(openRequest.result);
+    openRequest.onerror  = () => reject(openRequest.error);
+  });
+
+  await new Promise((resolve, reject) => {
+    const tx = db.transaction("friends", "readwrite");
+    const store = tx.objectStore("friends");
+
+    const request = store.put({
+      friend_id: friendId,
+      friend_username: friendUsername
+    });
+
+    request.onsuccess = () => resolve();
+    request.onerror   = () => reject(request.error);
+  });
+
+  Module.sendFriendRequest(
+    curUserName,
+    String(curUserId),
+    String(friendId),
+    friendUsername
+  );
 });
 
 SocialGraphHandler::SocialGraphHandler(SessionStorageUserService& sessionStorageUserService): sessionStorageUserService(sessionStorageUserService)  {
-  auto jsonStr = get_social_graph_from_indexed_db();
-  if (jsonStr != nullptr) {
-    json j = json::parse(jsonStr);
-    for (const auto &item : j) {
-      this->social_graph.push_back(UserGraph::fromJson(item));
+  create_friends_structure_in_indexed_db();
+  auto loggedUser = this->sessionStorageUserService.getNullableLoggedUser();
+    if (loggedUser == nullptr) {
+        return;
     }
-  }
+  recreate_friends_documents(loggedUser->getUsername().c_str(), std::to_string(loggedUser->getUserId()).c_str());
 }
 
 UserGraph *SocialGraphHandler::GetUserGraph(int64_t user_id) {
