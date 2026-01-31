@@ -17,9 +17,10 @@ export default class ShardingService {
     this.provider.awareness.on("change", this.handleAwarenessChange);
   }
 
-  handleAwarenessChange = ({ added, updated, removed }) => {
+  handleAwarenessChange = async ({ added, updated, removed }) => {
     const states = this.provider.awareness.getStates();
-    added.forEach((clientID) => {
+
+    for (const clientID of added) {
       const clientState = states.get(clientID);
 
       if (clientState?.user != undefined) {
@@ -38,7 +39,8 @@ export default class ShardingService {
             "Received friend request from ",
             clientState.friend_request.source_username,
           );
-          this.module.createYdocAndRoom(
+          // ATTENDRE la création du document
+          await this.module.createYdocAndRoom(
             clientState.friend_request.roomId,
             clientState.friend_request.targeted_user_name,
             clientState.friend_request.targeted_user_id,
@@ -46,9 +48,10 @@ export default class ShardingService {
           );
         }
       }
-    });
+    }
 
-    updated.forEach((clientID) => {
+    // Même chose pour updated
+    for (const clientID of updated) {
       const clientState = states.get(clientID);
 
       if (clientState?.user != undefined) {
@@ -66,7 +69,7 @@ export default class ShardingService {
             "Received friend request from ",
             clientState.friend_request.source_username,
           );
-          this.module.createYdocAndRoom(
+          await this.module.createYdocAndRoom(
             clientState.friend_request.roomId,
             clientState.friend_request.targeted_user_name,
             clientState.friend_request.targeted_user_id,
@@ -74,11 +77,10 @@ export default class ShardingService {
           );
         }
       }
-    });
+    }
 
     removed.forEach((clientID) => {
       const clientState = states.get(clientID);
-
       if (clientState?.user != undefined) {
         this.annuaireService.removeLoggedUser(clientState.user.userId);
       }

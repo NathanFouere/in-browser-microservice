@@ -17,27 +17,4 @@ const provider = new WebrtcProvider(sharedRoomName, sharedDoc, {
 
 const persistence = new IndexeddbPersistence(sharedDocName, sharedDoc);
 
-const personnalDoc = new Y.Doc();
-
-// ToDO => pas dingue comme implem
-const personnalProvider = new WebrtcProvider(
-  "personal-" + sharedRoomName,
-  personnalDoc,
-  {
-    signaling: ["ws://" + signalingServerIp + ":4444"],
-  },
-);
-
-const personnalPersistence = new IndexeddbPersistence(
-  personnalRoomName,
-  personnalDoc,
-);
-
-export {
-  sharedDoc,
-  persistence,
-  provider,
-  personnalDoc,
-  personnalPersistence,
-  personnalProvider,
-};
+export { sharedDoc, persistence, provider };

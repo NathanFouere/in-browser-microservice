@@ -1,10 +1,8 @@
 import * as Y from "yjs";
 import { WebrtcProvider } from "y-webrtc";
 import { IndexeddbPersistence } from "y-indexeddb";
-import di from "../di.js";
-import { signalingServerIp } from "./consts";
 
-function sendFriendRequest(
+async function sendFriendRequest(
   cur_user_name,
   cur_user_id,
   follow_id,
@@ -12,16 +10,22 @@ function sendFriendRequest(
 ) {
   const newDoc = new Y.Doc();
   const roomId = cur_user_id + "-" + follow_id;
+
+  // Créer la persistence et ATTENDRE qu'elle soit prête
+  const persistence = new IndexeddbPersistence(roomId, newDoc);
+
+  await persistence.whenSynced.then(() => {
+    console.log(`IndexedDB synced for room ${roomId}`);
+  });
+
   const provider = new WebrtcProvider(roomId, newDoc, {
     signaling: ["ws://" + signalingServerIp + ":4444"],
   });
 
-  const persistence = new IndexeddbPersistence(roomId, newDoc);
-
   provider.awareness.setLocalStateField("user", {
     username: cur_user_name.toString(),
     userId: cur_user_id.toString(),
-    clientId: newDoc.clientID, // cf . https://docs.yjs.dev/api/about-awareness "The clientID is usually the ydoc.clientID."
+    clientId: newDoc.clientID,
   });
 
   di.module.connections[follow_id] = {
@@ -29,7 +33,6 @@ function sendFriendRequest(
     provider: provider,
     persistence: persistence,
   };
-  console.log(di.module.connections);
 
   di.module.mainProvider.awareness.setLocalStateField("friend_request", {
     targeted_user_id: follow_id,
@@ -40,18 +43,24 @@ function sendFriendRequest(
   });
 }
 
-function createYdocAndRoom(roomId, cur_username, cur_user_id, userId) {
+async function createYdocAndRoom(roomId, cur_username, cur_user_id, userId) {
   const newDoc = new Y.Doc();
+
+  // ATTENDRE la persistence avant de continuer
+  const persistence = new IndexeddbPersistence(roomId, newDoc);
+
+  await persistence.whenSynced.then(() => {
+    console.log(`IndexedDB synced for room ${roomId}`);
+  });
+
   const provider = new WebrtcProvider(roomId, newDoc, {
     signaling: ["ws://" + signalingServerIp + ":4444"],
   });
 
-  const persistence = new IndexeddbPersistence(roomId, newDoc);
-
   provider.awareness.setLocalStateField("user", {
     username: cur_username,
     userId: cur_user_id.toString(),
-    clientId: newDoc.clientID, // cf . https://docs.yjs.dev/api/about-awareness "The clientID is usually the ydoc.clientID."
+    clientId: newDoc.clientID,
   });
 
   di.module.connections[userId] = {
@@ -61,7 +70,6 @@ function createYdocAndRoom(roomId, cur_username, cur_user_id, userId) {
   };
 
   console.log("Created new Y.Doc and room for userId:", userId);
-  console.log(di.module.connections);
 }
 
 export { sendFriendRequest, createYdocAndRoom };
