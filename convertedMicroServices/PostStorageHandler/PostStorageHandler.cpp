@@ -46,6 +46,7 @@ EM_JS(void, delete_post_in_indexed_db, (int64_t post_id), {
 
 EM_JS(char *, get_posts_from_indexed_db, (), {
   const aggregatedPosts = [];
+  const postAlreadyRetrieved = {};
 
   for (const userId in Module.connections) {
     console.log("connection for userid" + userId);
@@ -59,6 +60,11 @@ EM_JS(char *, get_posts_from_indexed_db, (), {
     const postsArray = entry.doc.getArray("posts");
 
     for (const post of postsArray.toArray()) {
+        console.log("post found in indexed db" + JSON.stringify(post));
+        if (postAlreadyRetrieved[post.post_id]) {
+            continue;
+        }
+        postAlreadyRetrieved[post.post_id] = true;
       aggregatedPosts.push(post);
     }
   }
@@ -70,7 +76,6 @@ EM_JS(char *, get_posts_from_indexed_db, (), {
 EM_JS(void, save_post_in_indexed_db, (const char *post_json_cstr), {
   const post = JSON.parse(UTF8ToString(post_json_cstr));
 
-  console.log("Module connections", Object.keys(Module.connections).length);
   if (!Module.connections) {
       return;
   }
