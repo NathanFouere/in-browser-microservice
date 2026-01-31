@@ -24,11 +24,24 @@ export default class ShardingService {
       const clientState = states.get(clientID);
 
       if (clientState?.user != undefined) {
+        this.annuaireService.communicateListOfUsers();
         this.annuaireService.addLoggedUser(
           clientState.user.userId,
           clientState.user.username,
           clientState.user.clientId,
         );
+      }
+
+      if (clientState?.annuaire != undefined) {
+        console.log("Processing annuaire state from client:", clientID);
+        const users = clientState.annuaire.users;
+        users.forEach((user) => {
+          this.annuaireService.addLoggedUser(
+            user.userId,
+            user.username,
+            user.clientId,
+          );
+        });
       }
 
       if (clientState?.friend_request != undefined) {
@@ -51,11 +64,11 @@ export default class ShardingService {
       }
     }
 
-    // Même chose pour updated
     for (const clientID of updated) {
       const clientState = states.get(clientID);
 
       if (clientState?.user != undefined) {
+        this.annuaireService.communicateListOfUsers();
         this.annuaireService.addLoggedUser(
           clientState.user.userId,
           clientState.user.username,
@@ -63,6 +76,17 @@ export default class ShardingService {
         );
       }
 
+      if (clientState?.annuaire != undefined) {
+        console.log("Processing annuaire state from client:", clientID);
+        const users = clientState.annuaire.users;
+        users.forEach((user) => {
+          this.annuaireService.addLoggedUser(
+            user.userId,
+            user.username,
+            user.clientId,
+          );
+        });
+      }
       if (clientState?.friend_request != undefined) {
         const myUserId = this.sessionStorageUserService.getLoggedUser().userid;
         if (clientState.friend_request.targeted_user_id == String(myUserId)) {
