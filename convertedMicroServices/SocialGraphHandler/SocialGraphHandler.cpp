@@ -43,7 +43,7 @@ EM_ASYNC_JS(void, recreate_friends_documents, (const char* cur_user_name, const 
       continue;
     }
 
-    const roomId = myUserId + "-" + friendId;
+    const roomId = friendId + "-" + myUserId;
 
     try {
       await Module.createYdocAndRoom(
