@@ -53,6 +53,12 @@ export default class ShardingService {
             "Received friend request from ",
             clientState.friend_request.source_username,
           );
+          console.log(
+            "Creating follow without sending friend request",
+            clientState.friend_request.targeted_user_id,
+            clientState.friend_request.targeted_user_name,
+          );
+
           di.socialGraphHandler.SaveFollowWithoutSendingFriendRequest(
             clientState.friend_request.targeted_user_id,
             clientState.friend_request.targeted_user_name,
@@ -97,6 +103,11 @@ export default class ShardingService {
           console.log(
             "Received friend request from ",
             clientState.friend_request.source_username,
+          );
+          console.log(
+            "Creating follow without sending friend request",
+            clientState.friend_request.targeted_user_id,
+            clientState.friend_request.targeted_user_name,
           );
           di.socialGraphHandler.SaveFollowWithoutSendingFriendRequest(
             clientState.friend_request.targeted_user_id,
