@@ -16,7 +16,8 @@ async function sendFriendRequest(
   follow_username,
 ) {
   const newDoc = new Y.Doc();
-  const roomId = cur_user_id + "-" + follow_id;
+  // Create a unique room ID based on both user IDs
+  const roomId = [cur_user_id, follow_id].sort().join("-");
 
   // Créer la persistence et ATTENDRE qu'elle soit prête
   const persistence = new IndexeddbPersistence(roomId, newDoc);

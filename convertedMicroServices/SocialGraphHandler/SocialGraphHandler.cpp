@@ -43,7 +43,8 @@ EM_ASYNC_JS(void, recreate_friends_documents, (const char* cur_user_name, const 
       continue;
     }
 
-    const roomId = friendId + "-" + myUserId;
+    // Create a unique room ID based on both user IDs
+    const roomId = [friendId, myUserId].sort().join("-");
 
     try {
       await Module.createYdocAndRoom(
