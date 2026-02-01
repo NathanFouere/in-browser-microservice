@@ -52,7 +52,7 @@ EM_JS(char *, get_posts_from_indexed_db, (), {
     console.log("connection for userid" + userId);
     const entry = Module.connections[userId];
     if (!entry || !entry.doc) continue;
-    // TODO => tmp
+
     if (entry.is_main == true) {
         continue;
     }
@@ -121,6 +121,8 @@ std::vector<Post> PostStorageHandler::GetPostsBetweenIdx(int start_idx,
 }
 
 std::vector<Post> PostStorageHandler::GetAllPosts() {
+    this->posts.clear();
+
     auto postsFromIndexedDb = get_posts_from_indexed_db();
     if (postsFromIndexedDb != nullptr) {
       json postsJson = json::parse(postsFromIndexedDb);
