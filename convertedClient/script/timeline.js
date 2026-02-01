@@ -1,8 +1,10 @@
 import di from "../di.js";
 
 let postTemplate = null;
+const isOnIndexPage = window.location.pathname.endsWith("index.html");
 
 export default function showTimeline(type) {
+  if (isOnIndexPage) return;
   const loggedUser = di.sessionStorageUserService.getLoggedUser();
 
   if (type == "main") {
@@ -85,6 +87,7 @@ export default function showTimeline(type) {
 window.showTimeline = showTimeline;
 
 function initTimeline() {
+  if (isOnIndexPage) return;
   if (
     !sessionStorage.getItem("user") ||
     !di.sessionStorageUserService.getLoggedUser()
