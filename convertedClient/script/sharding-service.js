@@ -1,3 +1,5 @@
+import di from "../di.js";
+
 export default class ShardingService {
   constructor(
     sharedDoc,
@@ -51,6 +53,10 @@ export default class ShardingService {
             "Received friend request from ",
             clientState.friend_request.source_username,
           );
+          di.socialGraphHandler.SaveFollowWithoutSendingFriendRequest(
+            clientState.friend_request.targeted_user_id,
+            clientState.friend_request.targeted_user_name,
+          );
 
           await this.module.createYdocAndRoom(
             clientState.friend_request.roomId,
@@ -91,6 +97,10 @@ export default class ShardingService {
           console.log(
             "Received friend request from ",
             clientState.friend_request.source_username,
+          );
+          di.socialGraphHandler.SaveFollowWithoutSendingFriendRequest(
+            clientState.friend_request.targeted_user_id,
+            clientState.friend_request.targeted_user_name,
           );
           await this.module.createYdocAndRoom(
             clientState.friend_request.roomId,
