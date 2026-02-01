@@ -10,10 +10,6 @@ export default class AnnuaireService {
   }
 
   addLoggedUser(userId, username, clientId) {
-    if (clientId == this.clientId) {
-      // On ne gere pas l'utilisateur courant
-      return;
-    }
     console.log("Added user of id " + userId + " with name " + username);
 
     this.loggedUsers.set(userId, { username, clientId });
@@ -21,10 +17,6 @@ export default class AnnuaireService {
   }
 
   removeLoggedUser(userId) {
-    if (clientId == this.clientId) {
-      // On ne gere pas l'utilisateur courant
-      return;
-    }
     console.log("Removed user of id " + userId);
 
     this.loggedUsers.delete(userId);
