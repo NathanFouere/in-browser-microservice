@@ -236,7 +236,7 @@ void SocialGraphHandler::SaveFollow(const std::string user_id, const std::string
 
 void SocialGraphHandler::SaveFollowWithoutSendingFriendRequest(const std::string user_id, const std::string username) {
     auto loggedUser = this->sessionStorageUserService.getLoggedUser();
-    save_follow_in_indexed_cb(loggedUser.getUsername().c_str(), std::to_string(loggedUser.getUserId()).c_str(), user_id.c_str(), username.c_str());
+    save_follow_in_indexed_without_sending_friend_request(loggedUser.getUsername().c_str(), std::to_string(loggedUser.getUserId()).c_str(), user_id.c_str(), username.c_str());
 }
 
 void SocialGraphHandler::Follow(int64_t user_id, int64_t followee_id) {
