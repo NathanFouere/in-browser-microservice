@@ -146,12 +146,12 @@ EM_ASYNC_JS(void, save_follow_in_indexed_cb,
    const char* cur_user_id,
    const char* follow_id_str,
    const char* follow_username), {
-       console.log("save_follow_in_indexed_cb", curUserId, curUserName, friendId, friendUsername);
 
   const curUserId = Number(UTF8ToString(cur_user_id));
   const curUserName = UTF8ToString(cur_user_name);
   const friendId = Number(UTF8ToString(follow_id_str));
   const friendUsername = UTF8ToString(follow_username);
+  console.log("save_follow_in_indexed_cb", curUserId, curUserName, friendId, friendUsername);
 
   const db = await new Promise((resolve, reject) => {
     const openRequest = indexedDB.open("store", 2);
