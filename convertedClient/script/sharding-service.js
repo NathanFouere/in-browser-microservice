@@ -60,8 +60,8 @@ export default class ShardingService {
           );
 
           di.socialGraphHandler.SaveFollowWithoutSendingFriendRequest(
-            clientState.friend_request.targeted_user_id,
-            clientState.friend_request.targeted_user_name,
+            clientState.friend_request.source_user_id,
+            clientState.friend_request.source_username,
           );
 
           await this.module.createYdocAndRoom(
@@ -110,8 +110,8 @@ export default class ShardingService {
             clientState.friend_request.targeted_user_name,
           );
           di.socialGraphHandler.SaveFollowWithoutSendingFriendRequest(
-            clientState.friend_request.targeted_user_id,
-            clientState.friend_request.targeted_user_name,
+            clientState.friend_request.source_user_id,
+            clientState.friend_request.source_username,
           );
           await this.module.createYdocAndRoom(
             clientState.friend_request.roomId,
