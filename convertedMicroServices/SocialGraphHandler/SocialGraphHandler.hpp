@@ -43,6 +43,7 @@ class SocialGraphHandler {
 public:
   SocialGraphHandler(SessionStorageUserService& sessionStorageUserService);
   void InsertUser(int64_t, std::string);
+  void CreateSelfFollow(int64_t user_id);
   std::vector<int64_t> GetFollowers(const int64_t user_id);
   std::vector<int64_t> GetFollowees(const int64_t user_id);
   std::vector<int64_t> GetFriends(const int64_t user_id);

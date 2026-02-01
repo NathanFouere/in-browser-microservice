@@ -203,6 +203,11 @@ void SocialGraphHandler::InsertUser(int64_t user_id, std::string username) {
     UserGraph ug;
     ug.user_id = user_id;
     ug.username = username;
+
+    // Add self-follow relationship
+    ug.followers.push_back(user_id);
+    ug.followees.push_back(user_id);
+
     this->social_graph.push_back(ug);
     save_user_graph_in_indexed_db(ug.toJson().dump().c_str());
   }

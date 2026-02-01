@@ -14,6 +14,9 @@ EM_JS(void, edit_post_in_indexed_db, (const char *post_json_cstr), {
     const entry = Module.connections[userId];
     if (!entry || !entry.doc) continue;
 
+    if (entry.is_main == true) {
+        continue;
+    }
     const postsArray = entry.doc.getArray("posts");
 
     for (let i = 0; i < postsArray.length; i++) {
@@ -31,6 +34,9 @@ EM_JS(void, delete_post_in_indexed_db, (int64_t post_id), {
   for (const userId in Module.connections) {
     const entry = Module.connections[userId];
     if (!entry || !entry.doc) continue;
+    if (entry.is_main == true) {
+        continue;
+    }
 
     const postsArray = entry.doc.getArray("posts");
 
