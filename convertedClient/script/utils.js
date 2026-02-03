@@ -57,7 +57,7 @@ function propagatePosts(newDoc, personnalDoc) {
   const postsArray = newDoc.getArray("posts");
   const personnalDocPostsArray = personnalDoc.getArray("posts");
 
-  personnalDocPostsArray.push(postsArray.toArray());
+  postsArray.push(personnalDocPostsArray.toArray());
   console.log("Propagated posts to personnalDoc");
   console.log(personnalDocPostsArray.toArray());
   console.log(postsArray.toArray());
