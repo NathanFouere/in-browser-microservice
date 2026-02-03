@@ -42,6 +42,8 @@ async function sendFriendRequest(
     persistence: persistence,
   };
 
+  propagatePosts(newDoc, di.personnalDoc);
+
   di.module.mainProvider.awareness.setLocalStateField("friend_request", {
     targeted_user_id: follow_id,
     targeted_user_name: follow_username.toString(),
@@ -49,6 +51,16 @@ async function sendFriendRequest(
     source_user_id: cur_user_id.toString(),
     roomId: roomId,
   });
+}
+
+function propagatePosts(newDoc, personnalDoc) {
+  const postsArray = newDoc.getArray("posts");
+  const personnalDocPostsArray = personnalDoc.getArray("posts");
+
+  personnalDocPostsArray.push(postsArray.toArray());
+  console.log("Propagated posts to personnalDoc");
+  console.log(personnalDocPostsArray.toArray());
+  console.log(postsArray.toArray());
 }
 
 async function createYdocAndRoom(

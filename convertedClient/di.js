@@ -94,6 +94,7 @@ const di = {
   shardingService: shardingService,
   annuaireService: annuaireService,
   module: module,
+  personnalDoc: personnalDoc,
 };
 
 export default di;

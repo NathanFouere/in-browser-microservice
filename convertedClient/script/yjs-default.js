@@ -5,7 +5,6 @@ import {
   signalingServerIp,
   sharedDocName,
   sharedRoomName,
-  personnalRoomName,
   personnalDocName,
 } from "./consts";
 

@@ -1,6 +1,4 @@
 import di from "../di.js";
-import * as Y from "yjs";
-import { WebrtcProvider } from "y-webrtc";
 
 function clickEventHandler() {
   if (document.getElementById("media").value != "") {
