@@ -5,6 +5,7 @@ cmake_install.cmake
 Makefile
 *.cmake
 compile_commands.json
+CMakeFiles
 
 # Caches
 .emscripten_cache/

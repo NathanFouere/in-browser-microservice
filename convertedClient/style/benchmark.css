@@ -1,0 +1,64 @@
+#benchmark-dashboard {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 15px;
+  border-radius: 8px;
+  z-index: 9999;
+  font-family: Arial, sans-serif;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  min-width: 200px;
+}
+
+#benchmark-dashboard h5 {
+  margin: 0 0 10px 0;
+  text-align: center;
+  font-size: 16px;
+  border-bottom: 1px solid #555;
+  padding-bottom: 5px;
+}
+
+#benchmark-dashboard hr {
+  border-color: #555;
+  margin: 10px 0;
+}
+
+.benchmark-btn {
+  display: block;
+  width: 100%;
+  margin: 5px 0;
+  padding: 5px;
+  border: none;
+  color: white;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 12px;
+  transition: opacity 0.2s;
+}
+
+.benchmark-btn:hover {
+  opacity: 0.9;
+}
+
+.benchmark-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.btn-green {
+  background-color: #28a745;
+}
+.btn-blue {
+  background-color: #17a2b8;
+}
+.btn-orange {
+  background-color: #fd7e14;
+}
+.btn-red {
+  background-color: #dc3545;
+}
+.btn-purple {
+  background-color: #6f42c1;
+}

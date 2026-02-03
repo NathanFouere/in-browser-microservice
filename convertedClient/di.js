@@ -10,6 +10,10 @@ import ShardingService from "./script/sharding-service.js";
 import AnnuaireService from "./script/annuaire-service.js";
 import { sendFriendRequest, createYdocAndRoom } from "./script/utils.js";
 import { sharedRoomName, personnalRoomName } from "./script/consts";
+import ydoc, { persistence } from "./script/yjs.js";
+
+// Wait for IndexedDB to load data into ydoc
+await persistence.whenSynced;
 
 var module = await Module();
 
