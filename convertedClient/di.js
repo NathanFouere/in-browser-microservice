@@ -1,5 +1,8 @@
 import Module from "./wasm/convertedMicroServices.js";
-import ydoc from "./script/yjs.js";
+import ydoc, { persistence } from "./script/yjs.js";
+
+// Wait for IndexedDB to load data into ydoc
+await persistence.whenSynced;
 
 var module = await Module();
 

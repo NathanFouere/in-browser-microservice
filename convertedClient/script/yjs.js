@@ -12,6 +12,6 @@ const provider = new WebrtcProvider("test-room", ydoc, {
   signaling: ["ws://" + signalingServerIp + ":4444"],
 });
 
-const persistence = new IndexeddbPersistence(docName, ydoc);
+export const persistence = new IndexeddbPersistence(docName, ydoc);
 
 export default ydoc;
