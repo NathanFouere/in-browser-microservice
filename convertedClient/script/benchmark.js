@@ -1,5 +1,5 @@
 import di from "../di.js";
-import { persistence } from "./yjs.js";
+import { persistence, personnalPersistence } from "./yjs-default.js";
 
 window.clearDatabase = async () => {
     if (!confirm("Are you sure you want to DELETE ALL DATA? This cannot be undone.")) return;
@@ -7,6 +7,7 @@ window.clearDatabase = async () => {
     console.log("Clearing IndexedDB...");
     try {
         await persistence.clearData();
+        await personnalPersistence.clearData();
         console.log("Data cleared. Reloading...");
         window.location.reload();
     } catch (e) {

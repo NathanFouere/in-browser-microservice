@@ -32,10 +32,6 @@ HomeTimelineHandler::ReadHomeTimeline(int64_t user_id, int start_idx,
     });
   }
 
-  if (only_friends) {
-    std::vector<int64_t> followees =
-        this->socialGraphHandler.GetFollowees(user_id);
-    std::vector<int64_t> friends = this->socialGraphHandler.GetFriends(user_id);
   std::cout << "ReadHomeTimeline called. "
             << " Sort_order: " << sort_order << std::endl;
   std::cout << "ReadHomeTimeline: Total posts fetched from storage: "

@@ -4,31 +4,51 @@ let postTemplate = null;
 let currentOffset = 0;
 const LIMIT = 10;
 let currentType = "main";
+const isOnIndexPage = window.location.pathname.endsWith("index.html");
 
-  if (type == "main") {
-    const cardBlock = document.getElementById("card-block");
-    if (!cardBlock) return;
+
 // Remote Posts Observer State
 let newRemotePostsCount = 0;
 
 export function setupRemoteObserver() {
-    const ydoc = di.ydoc;
-    const postsArray = ydoc.getArray("posts");
+    window.addEventListener("remote-post-received", (event) => {
+        const addedPosts = event.detail.posts;
+        if (!addedPosts || addedPosts.length === 0) return;
 
-    postsArray.observe((event, transaction) => {
-        // 1. Filter: Only care about Remote changes
-        if (transaction.local) {
-             // If local change (we posted), we might want to refresh immediately (already handled by create-post reload or similar)
-             // For now, we assume local posts are handled elsewhere or auto-refresh
-             return;
+        const loggedUser = di.sessionStorageUserService.getLoggedUser();
+        if (!loggedUser) return;
+
+        let hasRelevantPost = false;
+        
+        try {
+            // Fetch fresh friend list from C++ SocialGraph
+            const friendsVector = di.socialGraphHandler.GetFriends(loggedUser.userid);
+            const friendIds = new Set();
+            for(let i=0; i<friendsVector.size(); i++) {
+                friendIds.add(friendsVector.get(i));
+            }
+             friendsVector.delete(); 
+             friendIds.add(loggedUser.userid); // Include self if needed
+
+             // Check if any of the added posts are from friends
+             for (const content of addedPosts) {
+                 if (content && content.creator && friendIds.has(Number(content.creator.user_id))) {
+                     hasRelevantPost = true;
+                     break;
+                 }
+             }
+
+        } catch (e) {
+            console.warn("[Timeline] Error checking friends for notification:", e);
+            return; 
         }
 
-        const tReceived = performance.now();
+        if (!hasRelevantPost) return;
 
-        // 2. Logic: Increment Counter
-        newRemotePostsCount++;
+        // Logic: Increment Counter
+        newRemotePostsCount += addedPosts.length;
         
-        // 3. UI Update
+        // UI Update
         const alertBox = document.getElementById('new-posts-alert');
         const countSpan = document.getElementById('new-posts-count');
         
@@ -36,13 +56,20 @@ export function setupRemoteObserver() {
             countSpan.innerText = newRemotePostsCount;
             alertBox.style.display = 'block';
             
-            // 4. Benchmark: Latency Measurement (Reception -> Notification Visible)
+            // Benchmark: Latency Measurement
+            // We use performance.now() as "received time" approximation 
+            // since the event is dispatched immediately on receipt in utils.js
+            const tReceived = performance.now();
+            
             requestAnimationFrame(() => {
                 const tDisplayed = performance.now();
                 console.log(`[Latency] Remote Post -> Notification: ${(tDisplayed - tReceived).toFixed(2)} ms (Count: ${newRemotePostsCount})`);
             });
         }
     });
+
+    console.log("[Timeline] Remote observer setup via Event Bus.");
+
 
     // Setup Click Listener for Refresh
     const alertBox = document.getElementById('new-posts-alert');

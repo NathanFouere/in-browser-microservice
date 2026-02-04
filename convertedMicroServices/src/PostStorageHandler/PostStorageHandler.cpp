@@ -140,12 +140,6 @@ std::vector<Post> PostStorageHandler::GetAllPosts() {
 }
 
 
-void PostStorageHandler::ShowPostsPresence() {
-    auto postsFromIndexedDb = get_posts_from_indexed_db();
-    std::cout << "ShowPostsPresence called" << std::endl;
-}
-
-
 void PostStorageHandler::EditPostText(int64_t post_id, std::string newText) {
   for (std::size_t i = 0; i < posts.size(); i++) {
     if (this->posts[i].post_id == post_id) {
@@ -197,6 +191,5 @@ EMSCRIPTEN_BINDINGS(post_storage_Module) {
       .constructor<>()
       .function("StorePost", &PostStorageHandler::StorePost)
       .function("DeletePost", &PostStorageHandler::DeletePost)
-      .function("ShowPostsPresence", &PostStorageHandler::ShowPostsPresence)
       .function("EditPostText", &PostStorageHandler::EditPostText);
 }
