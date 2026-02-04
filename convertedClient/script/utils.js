@@ -3,12 +3,7 @@ import { WebrtcProvider } from "y-webrtc";
 import { IndexeddbPersistence } from "y-indexeddb";
 import di from "../di.js";
 
-import {
-  signalingServerIp,
-  sharedDocName,
-  sharedRoomName,
-  personnalRoomName,
-} from "./consts";
+import { signalingServerIp } from "./consts";
 async function sendFriendRequest(
   cur_user_name,
   cur_user_id,
@@ -16,10 +11,11 @@ async function sendFriendRequest(
   follow_username,
 ) {
   const newDoc = new Y.Doc();
-  // Create a unique room ID based on both user IDs
-  const roomId = [cur_user_id, follow_id].sort().join("-");
 
-  // Créer la persistence et ATTENDRE qu'elle soit prête
+  // Permet d'avoir un roomId unique pour chaque paire d'utilisateurs
+  const roomId = [cur_user_id, follow_id].sort();
+
+  // créer la persistence et attend sa syncrhonisation
   const persistence = new IndexeddbPersistence(roomId, newDoc);
 
   await persistence.whenSynced.then(() => {

@@ -22,113 +22,81 @@ export default class ShardingService {
   handleAwarenessChange = async ({ added, updated, removed }) => {
     const states = this.provider.awareness.getStates();
 
-    for (const clientID of added) {
+    await this.processClientChanges(added, states);
+    await this.processClientChanges(updated, states);
+    this.processRemovedClients(removed, states);
+  };
+
+  async processClientChanges(clientIDs, states) {
+    for (const clientID of clientIDs) {
       const clientState = states.get(clientID);
+      if (!clientState) continue;
 
-      if (clientState?.user != undefined) {
-        this.annuaireService.communicateListOfUsers();
-        this.annuaireService.addLoggedUser(
-          clientState.user.userId,
-          clientState.user.username,
-          clientState.user.clientId,
-        );
-      }
-
-      if (clientState?.annuaire != undefined) {
-        const users = clientState.annuaire.users;
-        users.forEach((user) => {
-          this.annuaireService.addLoggedUser(
-            user.userId,
-            user.username,
-            user.clientId,
-          );
-        });
-      }
-
-      if (clientState?.friend_request != undefined) {
-        const myUserId = this.sessionStorageUserService.getLoggedUser().userid;
-
-        if (clientState.friend_request.targeted_user_id == String(myUserId)) {
-          console.log(
-            "Received friend request from ",
-            clientState.friend_request.source_username,
-          );
-          console.log(
-            "Creating follow without sending friend request",
-            clientState.friend_request.targeted_user_id,
-            clientState.friend_request.targeted_user_name,
-          );
-
-          di.socialGraphHandler.SaveFollowWithoutSendingFriendRequest(
-            clientState.friend_request.source_user_id,
-            clientState.friend_request.source_username,
-          );
-
-          await this.module.createYdocAndRoom(
-            clientState.friend_request.roomId,
-            clientState.friend_request.targeted_user_name,
-            clientState.friend_request.targeted_user_id,
-            clientState.friend_request.source_user_id,
-            this.module,
-          );
-        }
-      }
+      this.handleUserState(clientState);
+      this.handleAnnuaireState(clientState);
+      await this.handleFriendRequest(clientState);
     }
+  }
 
-    for (const clientID of updated) {
-      const clientState = states.get(clientID);
-
-      if (clientState?.user != undefined) {
-        this.annuaireService.communicateListOfUsers();
-        this.annuaireService.addLoggedUser(
-          clientState.user.userId,
-          clientState.user.username,
-          clientState.user.clientId,
-        );
-      }
-
-      if (clientState?.annuaire != undefined) {
-        const users = clientState.annuaire.users;
-        users.forEach((user) => {
-          this.annuaireService.addLoggedUser(
-            user.userId,
-            user.username,
-            user.clientId,
-          );
-        });
-      }
-      if (clientState?.friend_request != undefined) {
-        const myUserId = this.sessionStorageUserService.getLoggedUser().userid;
-        if (clientState.friend_request.targeted_user_id == String(myUserId)) {
-          console.log(
-            "Received friend request from ",
-            clientState.friend_request.source_username,
-          );
-          console.log(
-            "Creating follow without sending friend request",
-            clientState.friend_request.targeted_user_id,
-            clientState.friend_request.targeted_user_name,
-          );
-          di.socialGraphHandler.SaveFollowWithoutSendingFriendRequest(
-            clientState.friend_request.source_user_id,
-            clientState.friend_request.source_username,
-          );
-          await this.module.createYdocAndRoom(
-            clientState.friend_request.roomId,
-            clientState.friend_request.targeted_user_name,
-            clientState.friend_request.targeted_user_id,
-            clientState.friend_request.source_user_id,
-            this.module,
-          );
-        }
-      }
+  handleUserState(clientState) {
+    if (clientState.user) {
+      this.annuaireService.communicateListOfUsers();
+      this.annuaireService.addLoggedUser(
+        clientState.user.userId,
+        clientState.user.username,
+        clientState.user.clientId,
+      );
     }
+  }
 
-    removed.forEach((clientID) => {
+  handleAnnuaireState(clientState) {
+    if (clientState.annuaire?.users) {
+      clientState.annuaire.users.forEach((user) => {
+        this.annuaireService.addLoggedUser(
+          user.userId,
+          user.username,
+          user.clientId,
+        );
+      });
+    }
+  }
+
+  async handleFriendRequest(clientState) {
+    const friendRequest = clientState.friend_request;
+    if (!friendRequest) return;
+
+    const myUserId = this.sessionStorageUserService.getLoggedUser().userid;
+    const isTargetedUser = friendRequest.targeted_user_id === String(myUserId);
+
+    if (!isTargetedUser) return;
+
+    console.log("Received friend request from", friendRequest.source_username);
+    console.log(
+      "Creating follow without sending friend request",
+      friendRequest.targeted_user_id,
+      friendRequest.targeted_user_name,
+    );
+
+    di.socialGraphHandler.SaveFollowWithoutSendingFriendRequest(
+      friendRequest.source_user_id,
+      friendRequest.source_username,
+    );
+
+    await this.module.createYdocAndRoom(
+      friendRequest.roomId,
+      friendRequest.targeted_user_name,
+      friendRequest.targeted_user_id,
+      friendRequest.source_user_id,
+      this.module,
+    );
+  }
+
+  processRemovedClients(clientIDs, states) {
+    clientIDs.forEach((clientID) => {
       const clientState = states.get(clientID);
-      if (clientState?.user != undefined) {
+      if (clientState?.user) {
         this.annuaireService.removeLoggedUser(clientState.user.userId);
       }
     });
-  };
+  }
 }
