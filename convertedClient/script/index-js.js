@@ -9,7 +9,6 @@ function loginHandler(event) {
   const loginResponse = di.userHandler.Login(usernameInput, passwordInput);
 
   if (loginResponse == true) {
-    console.log("Success");
     window.location.href = "../src/main.html";
   } else {
     console.error("error while logging in");

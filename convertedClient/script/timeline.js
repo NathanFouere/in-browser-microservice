@@ -1,8 +1,10 @@
-import di from '../di.js'
+import di from "../di.js";
 
 let postTemplate = null;
+const isOnIndexPage = window.location.pathname.endsWith("index.html");
 
 export default function showTimeline(type) {
+  if (isOnIndexPage) return;
   const loggedUser = di.sessionStorageUserService.getLoggedUser();
 
   if (type == "main") {
@@ -12,11 +14,16 @@ export default function showTimeline(type) {
     // Use cached template
     if (!postTemplate) return;
 
-    const onlyFriendsToggle = document.getElementById('only-friends-toggle');
+    const onlyFriendsToggle = document.getElementById("only-friends-toggle");
     const onlyFriends = onlyFriendsToggle ? onlyFriendsToggle.checked : false;
 
     // Fetch posts (synchronous for now based on current impl)
-    const postsVector = di.homeTimelineHandler.ReadHomeTimeline(loggedUser.userid, 0, 10, onlyFriends);
+    const postsVector = di.homeTimelineHandler.ReadHomeTimeline(
+      loggedUser.userid,
+      0,
+      10,
+      onlyFriends,
+    );
 
     const posts = [];
     for (let i = 0; i < postsVector.size(); i++) {
@@ -24,8 +31,10 @@ export default function showTimeline(type) {
     }
 
     // Sort by timestamp based on toggle button
-    const sortBtn = document.getElementById('sort-toggle-btn');
-    const sortAsc = sortBtn ? sortBtn.getAttribute('data-sort') === 'asc' : false;
+    const sortBtn = document.getElementById("sort-toggle-btn");
+    const sortAsc = sortBtn
+      ? sortBtn.getAttribute("data-sort") === "asc"
+      : false;
 
     posts.sort((a, b) => {
       const valA = Number(a.timestamp);
@@ -54,18 +63,18 @@ export default function showTimeline(type) {
       // Hook buttons
       const deleteBtn = clone.querySelector(".delete-post-btn");
       if (deleteBtn) {
-        deleteBtn.addEventListener('click', () => {
-          $('#deletePostModal').data('post-id', p.post_id).modal('show');
+        deleteBtn.addEventListener("click", () => {
+          $("#deletePostModal").data("post-id", p.post_id).modal("show");
         });
       }
 
       const editBtn = clone.querySelector(".edit-post-btn");
       if (editBtn) {
-        editBtn.addEventListener('click', () => {
-          $('#editPostModal').data('post-id', p.post_id);
-          const editPostTextarea = document.getElementById('editPostTextarea');
+        editBtn.addEventListener("click", () => {
+          $("#editPostModal").data("post-id", p.post_id);
+          const editPostTextarea = document.getElementById("editPostTextarea");
           editPostTextarea.value = p.text;
-          $('#editPostModal').modal('show');
+          $("#editPostModal").modal("show");
         });
       }
 
@@ -78,7 +87,11 @@ export default function showTimeline(type) {
 window.showTimeline = showTimeline;
 
 function initTimeline() {
-  if (!sessionStorage.getItem("user") || !di.sessionStorageUserService.getLoggedUser()) {
+  if (isOnIndexPage) return;
+  if (
+    !sessionStorage.getItem("user") ||
+    !di.sessionStorageUserService.getLoggedUser()
+  ) {
     console.log("User not logged in, redirecting to login page.");
     window.location.href = "../index.html";
     return;
@@ -86,7 +99,6 @@ function initTimeline() {
 
   const allCards = document.getElementsByClassName("post-card");
   if (allCards.length > 0) {
-    console.log("timeline.js: Template captured.");
     postTemplate = allCards[0].cloneNode(true);
     allCards[0].remove();
   } else {
@@ -95,59 +107,59 @@ function initTimeline() {
 
   showTimeline("main");
 
-  const toggle = document.getElementById('only-friends-toggle');
+  const toggle = document.getElementById("only-friends-toggle");
   if (toggle) {
-    toggle.addEventListener('change', () => {
+    toggle.addEventListener("change", () => {
       showTimeline("main");
     });
   }
 
-  $('#confirmDeletePostBtn').on('click', () => {
-    const postId = $('#deletePostModal').data('post-id');
+  $("#confirmDeletePostBtn").on("click", () => {
+    const postId = $("#deletePostModal").data("post-id");
     if (postId) {
       di.postStorageHandler.DeletePost(postId);
-      $('#deletePostModal').modal('hide');
+      $("#deletePostModal").modal("hide");
       showTimeline("main");
       //setTimeout(() => { showTimeline("main"); }, 500);
     }
   });
 
-  $('#confirmEditPostBtn').on('click', () => {
-    const postId = $('#editPostModal').data('post-id');
+  $("#confirmEditPostBtn").on("click", () => {
+    const postId = $("#editPostModal").data("post-id");
     if (postId) {
-      const editPostTextarea = document.getElementById('editPostTextarea');
+      const editPostTextarea = document.getElementById("editPostTextarea");
       di.postStorageHandler.EditPostText(postId, editPostTextarea.value);
-      $('#editPostModal').modal('hide');
+      $("#editPostModal").modal("hide");
       showTimeline("main");
       //setTimeout(() => { showTimeline("main"); }, 500);
     }
   });
-  const sortBtn = document.getElementById('sort-toggle-btn');
+  const sortBtn = document.getElementById("sort-toggle-btn");
   if (sortBtn) {
-    sortBtn.addEventListener('click', () => {
-      const currentSort = sortBtn.getAttribute('data-sort');
-      const newSort = currentSort === 'desc' ? 'asc' : 'desc';
-      sortBtn.setAttribute('data-sort', newSort);
+    sortBtn.addEventListener("click", () => {
+      const currentSort = sortBtn.getAttribute("data-sort");
+      const newSort = currentSort === "desc" ? "asc" : "desc";
+      sortBtn.setAttribute("data-sort", newSort);
 
       // Update UI
-      const icon = sortBtn.querySelector('i');
-      const label = document.getElementById('sort-label');
+      const icon = sortBtn.querySelector("i");
+      const label = document.getElementById("sort-label");
 
-      if (newSort === 'asc') {
-        icon.className = 'fas fa-arrow-up';
-        label.innerText = 'Oldest first';
+      if (newSort === "asc") {
+        icon.className = "fas fa-arrow-up";
+        label.innerText = "Oldest first";
       } else {
-        icon.className = 'fas fa-arrow-down';
-        label.innerText = 'Newest first';
+        icon.className = "fas fa-arrow-down";
+        label.innerText = "Newest first";
       }
 
       showTimeline("main");
     });
   }
 
-  const logoutBtn = document.getElementById('logout-btn');
+  const logoutBtn = document.getElementById("logout-btn");
   if (logoutBtn) {
-    logoutBtn.addEventListener('click', (e) => {
+    logoutBtn.addEventListener("click", (e) => {
       e.preventDefault();
       logout();
     });

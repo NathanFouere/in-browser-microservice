@@ -1,14 +1,14 @@
 #include "UniqueIdHandler.hpp"
 #include <emscripten/bind.h>
+#include <limits.h>
 
 using namespace emscripten;
 
 UniqueIdHandler::UniqueIdHandler(const std::string &machine_id) {
     _machine_id = machine_id;
-    std::cout << "UniqueIdHandler initialized with machine_id: " << machine_id << std::endl;
 }
 
-int64_t UniqueIdHandler::ComposeUniqueId() {
+int UniqueIdHandler::ComposeUniqueId() {
     int64_t timestamp =
         duration_cast<milliseconds>(system_clock::now().time_since_epoch())
             .count() -
@@ -41,7 +41,7 @@ int64_t UniqueIdHandler::ComposeUniqueId() {
     std::string post_id_str = _machine_id + timestamp_hex + counter_hex;
     int64_t post_id = stoull(post_id_str, nullptr, 16) & 0x7FFFFFFFFFFFFFFF;
 
-    return post_id;
+    return static_cast<int>(post_id % INT_MAX);
 }
 
 EMSCRIPTEN_BINDINGS(unique_id_module) {

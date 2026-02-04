@@ -1,6 +1,4 @@
 import di from "../di.js";
-import * as Y from "yjs";
-import { WebrtcProvider } from "y-webrtc";
 
 function clickEventHandler() {
   if (document.getElementById("media").value != "") {
@@ -14,13 +12,13 @@ function uploadPost(media_json) {
   if (document.getElementById("post-content").value !== "") {
     var body = document.getElementById("post-content").value;
     const loggedUser = di.sessionStorageUserService.getLoggedUser();
+    console.log("Creating post for user: ", loggedUser);
     di.composePostHandler.ComposePost(
       loggedUser.username,
       loggedUser.userid,
       body,
       di.module.PostType.POST,
     );
-    window.location.reload();
   }
 }
 

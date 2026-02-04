@@ -10,12 +10,13 @@ class PostStorageHandler {
         PostStorageHandler();
         void StorePost(const Post &post);
         Post* ReadPost(int64_t post_id);
-        std::vector<Post> GetAllPosts() const;
+        std::vector<Post> GetAllPosts();
         std::vector<Post> GetPostsByUserId(int64_t user_id) const;
         void DeletePost(int64_t post_id);
         Post* GetPostById(int64_t post_id);
         std::vector<Post> GetPostsBetweenIdx(int start_idx, int stop_idx) const;
         void EditPostText(int64_t post_id, std::string newText);
+        void ShowPostsPresence();
     private:
         std::vector<Post> posts;
 };
