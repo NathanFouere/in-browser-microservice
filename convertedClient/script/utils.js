@@ -86,9 +86,28 @@ async function createYdocAndRoom(
   const postsArray = newDoc.getArray("posts");
   postsArray.observe((event) => {
     if (event.transaction.origin !== null) {
-      console.log("Ajout d'un post distant");
+        console.log("Ajout d'un post distant");
+        
+        // Extract added posts to pass to event
+        // We only care if there are additions
+         const addedPosts = [];
+         event.changes.added.forEach(item => {
+             item.content.getContent().forEach(content => {
+                 addedPosts.push(content);
+             });
+         });
 
-      newDoc.transact(() => {});
+         if (addedPosts.length > 0) {
+             window.dispatchEvent(new CustomEvent("remote-post-received", { 
+                 detail: { 
+                     posts: addedPosts,
+                     roomId: roomId,
+                     userId: userId
+                 } 
+             }));
+         }
+
+        newDoc.transact(() => {});
     }
   });
   module.connections[userId] = {

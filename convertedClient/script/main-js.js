@@ -13,11 +13,6 @@ function followHandler(event) {
   di.socialGraphHandler.FollowWithUsername(username, follweeeName);
 }
 
-const button = document.getElementById("synchro");
-
-button.addEventListener("click", (event) => {
-  di.postStorageHandler.ShowPostsPresence();
-});
 
 function fillLoggedUser() {
   const annuaireService = di.annuaireService;
