@@ -27,7 +27,7 @@ services:
       - "4444:4444"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.ws-server.rule=Host(`nathan-fouere.com`) && PathPrefix(`/ws-server`)"
+      - "traefik.http.routers.ws-server.rule=Host(`nathan-fouere.com`) && PathPrefix(`/in-browser-microservice-ws-server`)"
       - "traefik.http.routers.ws-server.entrypoints=websecure"
       - "traefik.http.services.ws-server.loadbalancer.server.port=4444"
       - "traefik.http.routers.ws-server.tls.certresolver=letencrypt"
@@ -40,10 +40,10 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - VITE_WS_SERVER_ADDR=nathan-fouere.com/in-browser-microservice/ws-server
+      - VITE_WS_SERVER_ADDR=nathan-fouere.com/in-browser-microservice/in-browser-microservice-ws-server
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.client.rule=Host(`nathan-fouere.com`)"
+      - "traefik.http.routers.client.rule=Host(`nathan-fouere.com`) && PathPrefix(`/in-browser-microservice-client`)"
       - "traefik.http.routers.client.entrypoints=websecure"
       - "traefik.http.routers.client.tls.certresolver=letencrypt"
       - "traefik.http.routers.client.tls=true"
