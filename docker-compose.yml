@@ -23,8 +23,6 @@ services:
     build:
       context: ws-server
       dockerfile: Dockerfile
-    ports:
-      - "4444:4444"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.ws-server.rule=Host(`nathan-fouere.com`) && PathPrefix(`/in-browser-microservice-ws-server`)"
@@ -32,13 +30,12 @@ services:
       - "traefik.http.services.ws-server.loadbalancer.server.port=4444"
       - "traefik.http.routers.ws-server.tls.certresolver=letencrypt"
       - "traefik.http.routers.ws-server.tls=true"
+
   client:
     build:
       context: .
       dockerfile: Dockerfile
       target: production
-    ports:
-      - "3000:3000"
     environment:
       - VITE_WS_SERVER_ADDR=nathan-fouere.com/in-browser-microservice/in-browser-microservice-ws-server
     labels:
