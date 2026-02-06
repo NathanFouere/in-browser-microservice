@@ -25,7 +25,7 @@ services:
       dockerfile: Dockerfile
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.console.rule=Host(`in-browser-microservice.nathan-fouere.com`) && PathPrefix(`/ws-server`)"
+      - "traefik.http.routers.ws-server.rule=Host(`in-browser-microservice.nathan-fouere.com`) && PathPrefix(`/ws-server`)"
       - "traefik.http.routers.ws-server.entrypoints=websecure"
       - "traefik.http.services.ws-server.loadbalancer.server.port=4444"
       - "traefik.http.routers.ws-server.tls.certresolver=letencrypt"
@@ -36,11 +36,9 @@ services:
       context: .
       dockerfile: Dockerfile
       target: production
-    environment:
-      - VITE_WS_SERVER_ADDR=nathan-fouere.com/in-browser-microservice/in-browser-microservice-ws-server
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.console.rule=Host(`in-browser-microservice.nathan-fouere.com`)"
+      - "traefik.http.routers.client.rule=Host(`in-browser-microservice.nathan-fouere.com`)"
       - "traefik.http.routers.client.entrypoints=websecure"
       - "traefik.http.routers.client.tls.certresolver=letencrypt"
       - "traefik.http.routers.client.tls=true"
