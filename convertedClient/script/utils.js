@@ -23,7 +23,7 @@ async function sendFriendRequest(
   });
 
   const provider = new WebrtcProvider(roomId, newDoc, {
-    signaling: ["ws://" + signalingServerIp + ":4444"],
+    signaling: ["ws://" + signalingServerIp + ":4444"], // TODO le 4444 est à mettre dans le .env
   });
 
   provider.awareness.setLocalStateField("user", {

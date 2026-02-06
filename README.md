@@ -1,3 +1,12 @@
+# In-browser microservices
+
+The goal of this project is to port a microservices-based application (a social network) to the browser (using Emscripten), and to study the performance of the resulting port compared to the server-side version.
+
+The application ported to the browser is the Social Network application from the DeathStarBench benchmark suite:
+
+Repository: https://github.com/delimitrou/DeathStarBench
+Application: socialNetwork microservices application
+
 ## Compiler pour le client
 
 Il faut lancer le script build-for-client avec la commande `./build-for-client.sh`
