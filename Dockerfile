@@ -28,4 +28,4 @@ RUN npm install -g serve
 COPY --from=frontend-builder /app/dist ./dist
 EXPOSE 3000
 ENV VITE_WS_SERVER_ADDR=nathan-fouere.com/in-browser-microservice/ws-server
-CMD ["serve", "-s", "dist", "-l", "3000"]
+CMD ["serve", "-s", "dist", "-l", "3000", "--listen", "0.0.0.0"]
