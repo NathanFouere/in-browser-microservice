@@ -7,6 +7,13 @@ The application ported to the browser is the Social Network application from the
 Repository: https://github.com/delimitrou/DeathStarBench
 Application: socialNetwork microservices application
 
+## Déploiement
+
+```shell
+ ansible-playbook install-dependencies.yaml -i inventories/main.yaml --ask-vault-pass
+ ansible-playbook deploy-app.yaml -i inventories/main.yaml --ask-vault-pass
+```
+
 ## Compiler pour le client
 
 Il faut lancer le script build-for-client avec la commande `./build-for-client.sh`

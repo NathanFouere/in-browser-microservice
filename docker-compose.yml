@@ -48,3 +48,6 @@ services:
       - "traefik.http.routers.client.tls.certresolver=letencrypt"
       - "traefik.http.routers.client.tls=true"
       - "traefik.http.services.client.loadbalancer.server.port=3000"
+
+volumes:
+  traefik-certs:
