@@ -1,3 +1,5 @@
 all:
   hosts:
     server:
+      ansible_host: 82.112.242.239
+      ansible_user: root
