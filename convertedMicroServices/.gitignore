@@ -5,4 +5,3 @@ Makefile
 convertedMicroServices.js
 convertedMicroServices.wasm
 libconvertedMicroServices.a
-_deps
