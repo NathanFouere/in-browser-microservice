@@ -15,88 +15,121 @@ export default class ShardingService {
     this.annuaireService = annuaireService;
     this.module = module;
     this.sessionStorageUserService = sessionStorageUserService;
-
+    console.log("ShardingService initialized");
     this.provider.awareness.on("change", this.handleAwarenessChange);
   }
 
   handleAwarenessChange = async ({ added, updated, removed }) => {
     const states = this.provider.awareness.getStates();
+    console.log("Awareness change detected", states);
 
-    await this.processClientChanges(added, states);
-    await this.processClientChanges(updated, states);
-    this.processRemovedClients(removed, states);
-  };
-
-  async processClientChanges(clientIDs, states) {
-    for (const clientID of clientIDs) {
+    for (const clientID of added) {
       const clientState = states.get(clientID);
-      if (!clientState) continue;
-
-      this.handleUserState(clientState);
-      this.handleAnnuaireState(clientState);
-      await this.handleFriendRequest(clientState);
-    }
-  }
-
-  handleUserState(clientState) {
-    if (clientState.user) {
-      this.annuaireService.communicateListOfUsers();
-      this.annuaireService.addLoggedUser(
-        clientState.user.userId,
-        clientState.user.username,
-        clientState.user.clientId,
-      );
-    }
-  }
-
-  handleAnnuaireState(clientState) {
-    if (clientState.annuaire?.users) {
-      clientState.annuaire.users.forEach((user) => {
+      console.log("Client added with state", clientState);
+      if (clientState?.user != undefined) {
+        this.annuaireService.communicateListOfUsers();
         this.annuaireService.addLoggedUser(
-          user.userId,
-          user.username,
-          user.clientId,
+          clientState.user.userId,
+          clientState.user.username,
+          clientState.user.clientId,
         );
-      });
+      }
+
+      if (clientState?.annuaire != undefined) {
+        const users = clientState.annuaire.users;
+        users.forEach((user) => {
+          this.annuaireService.addLoggedUser(
+            user.userId,
+            user.username,
+            user.clientId,
+          );
+        });
+      }
+
+      if (clientState?.friend_request != undefined) {
+        const myUserId = this.sessionStorageUserService.getLoggedUser().userid;
+
+        if (clientState.friend_request.targeted_user_id == String(myUserId)) {
+          console.log(
+            "Received friend request from ",
+            clientState.friend_request.source_username,
+          );
+          console.log(
+            "Creating follow without sending friend request",
+            clientState.friend_request.targeted_user_id,
+            clientState.friend_request.targeted_user_name,
+          );
+
+          di.socialGraphHandler.SaveFollowWithoutSendingFriendRequest(
+            clientState.friend_request.source_user_id,
+            clientState.friend_request.source_username,
+          );
+
+          await this.module.createYdocAndRoom(
+            clientState.friend_request.roomId,
+            clientState.friend_request.targeted_user_name,
+            clientState.friend_request.targeted_user_id,
+            clientState.friend_request.source_user_id,
+            this.module,
+          );
+        }
+      }
     }
-  }
 
-  async handleFriendRequest(clientState) {
-    const friendRequest = clientState.friend_request;
-    if (!friendRequest) return;
-
-    const myUserId = this.sessionStorageUserService.getLoggedUser().userid;
-    const isTargetedUser = friendRequest.targeted_user_id === String(myUserId);
-
-    if (!isTargetedUser) return;
-
-    console.log("Received friend request from", friendRequest.source_username);
-    console.log(
-      "Creating follow without sending friend request",
-      friendRequest.targeted_user_id,
-      friendRequest.targeted_user_name,
-    );
-
-    di.socialGraphHandler.SaveFollowWithoutSendingFriendRequest(
-      friendRequest.source_user_id,
-      friendRequest.source_username,
-    );
-
-    await this.module.createYdocAndRoom(
-      friendRequest.roomId,
-      friendRequest.targeted_user_name,
-      friendRequest.targeted_user_id,
-      friendRequest.source_user_id,
-      this.module,
-    );
-  }
-
-  processRemovedClients(clientIDs, states) {
-    clientIDs.forEach((clientID) => {
+    for (const clientID of updated) {
       const clientState = states.get(clientID);
-      if (clientState?.user) {
+      console.log("Client updated with state", clientState);
+      if (clientState?.user != undefined) {
+        this.annuaireService.communicateListOfUsers();
+        this.annuaireService.addLoggedUser(
+          clientState.user.userId,
+          clientState.user.username,
+          clientState.user.clientId,
+        );
+      }
+
+      if (clientState?.annuaire != undefined) {
+        const users = clientState.annuaire.users;
+        users.forEach((user) => {
+          this.annuaireService.addLoggedUser(
+            user.userId,
+            user.username,
+            user.clientId,
+          );
+        });
+      }
+      if (clientState?.friend_request != undefined) {
+        const myUserId = this.sessionStorageUserService.getLoggedUser().userid;
+        if (clientState.friend_request.targeted_user_id == String(myUserId)) {
+          console.log(
+            "Received friend request from ",
+            clientState.friend_request.source_username,
+          );
+          console.log(
+            "Creating follow without sending friend request",
+            clientState.friend_request.targeted_user_id,
+            clientState.friend_request.targeted_user_name,
+          );
+          di.socialGraphHandler.SaveFollowWithoutSendingFriendRequest(
+            clientState.friend_request.source_user_id,
+            clientState.friend_request.source_username,
+          );
+          await this.module.createYdocAndRoom(
+            clientState.friend_request.roomId,
+            clientState.friend_request.targeted_user_name,
+            clientState.friend_request.targeted_user_id,
+            clientState.friend_request.source_user_id,
+            this.module,
+          );
+        }
+      }
+    }
+
+    removed.forEach((clientID) => {
+      const clientState = states.get(clientID);
+      if (clientState?.user != undefined) {
         this.annuaireService.removeLoggedUser(clientState.user.userId);
       }
     });
-  }
+  };
 }

@@ -3,16 +3,14 @@ WORKDIR /app
 
 COPY convertedMicroServices/CMakeLists.txt .
 COPY convertedMicroServices/src ./src
-
 RUN emcmake cmake .
 RUN emmake make
 
 
-FROM node:23-alpine AS frontend-builder
+FROM node:20-alpine AS frontend
 WORKDIR /app
 
 COPY convertedClient .
-
 RUN npm ci
 
 COPY --from=emscripten-builder /app/convertedMicroServices.js ./wasm/convertedMicroServices.js
@@ -20,12 +18,11 @@ COPY --from=emscripten-builder /app/convertedMicroServices.wasm ./wasm/converted
 
 RUN npm run build
 
-FROM node:23-alpine as production
-WORKDIR /app
+FROM node:20-alpine AS production
 
-RUN npm install -g serve
+COPY --from=frontend /app .
 
-COPY --from=frontend-builder /app/dist ./dist
 EXPOSE 3000
 ENV VITE_WS_SERVER_ADDR=nathan-fouere.com/in-browser-microservice/ws-server
-CMD ["serve", "-s", "dist", "-l", "3000", "--listen", "0.0.0.0"]
+
+CMD ["npm", "run", "preview"]

@@ -9,9 +9,31 @@ Application: socialNetwork microservices application
 
 ## Déploiement
 
-```shell
+```bash
  ansible-playbook install-dependencies.yaml -i inventories/main.yaml --ask-vault-pass
  ansible-playbook deploy-app.yaml -i inventories/main.yaml --ask-vault-pass
+```
+
+## Développement
+
+On build d'abord
+```bash
+nix develop
+./build-for-client.sh
+```
+
+On lance ensuite le serveur WebSocket dans le repertorie ws-server
+
+```bash
+PORT=4444 node server.js
+```
+
+Ensuite on configure le .env en mettant l'ip de notre server websocket dans la variable "VITE_WS_SERVER_ADDR" dans le repertoire "convertedClient". (exemple : VITE_WS_SERVER_ADDR: ws://192.168.1.222:4444)
+
+On peut ensuite lancer vite en dev dans le même repertoire
+
+```bash
+npm run dev
 ```
 
 ## Compiler pour le client

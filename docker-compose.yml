@@ -1,7 +1,7 @@
 services:
   reverse-proxy:
     restart: always
-    image: "traefik:v3.4"
+    image: "traefik:v3.6.1"
     ports:
       - "443:443"
       - "80:80"
@@ -19,6 +19,20 @@ services:
       - "traefik.http.routers.traefik-dashboard.tls=true"
       - "traefik.http.routers.traefik-dashboard.tls.certresolver=letencrypt"
 
+  ws-server:
+    build:
+      context: ws-server
+      dockerfile: Dockerfile
+    ports:
+      - "4444:4444"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ws-server.rule=Host(`in-browser-microservice.nathan-fouere.com`) && PathPrefix(`/ws-server`)"
+      - "traefik.http.routers.ws-server.entrypoints=websecure"
+      - "traefik.http.services.ws-server.loadbalancer.server.port=4444"
+      - "traefik.http.routers.ws-server.tls.certresolver=letencrypt"
+      - "traefik.http.routers.ws-server.tls=true"
+
   client:
     build:
       context: .
@@ -31,6 +45,5 @@ services:
       - "traefik.http.routers.client.tls.certresolver=letencrypt"
       - "traefik.http.routers.client.tls=true"
       - "traefik.http.services.client.loadbalancer.server.port=3000"
-      - "traefik.http.routers.client.service=client"
 volumes:
   traefik-certs:

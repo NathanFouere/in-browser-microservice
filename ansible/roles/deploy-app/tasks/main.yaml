@@ -8,7 +8,7 @@
 - name: Générer .env
   ansible.builtin.template:
     src: templates/.env.j2
-    dest: /root/in-browser-microservice/.env
+    dest: /root/in-browser-microservice/convertedClient/.env
 
 - name: Start the application
   community.docker.docker_compose_v2:

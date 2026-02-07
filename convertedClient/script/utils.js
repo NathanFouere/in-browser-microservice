@@ -13,7 +13,14 @@ async function sendFriendRequest(
   const newDoc = new Y.Doc();
 
   // Permet d'avoir un roomId unique pour chaque paire d'utilisateurs
-  const roomId = [cur_user_id, follow_id].sort();
+  console.log(
+    "Creating room for friendId",
+    follow_id,
+    "and current userId",
+    cur_user_id,
+    "in utils",
+  );
+  const roomId = [cur_user_id, follow_id].sort().join("-");
 
   // créer la persistence et attend sa syncrhonisation
   const persistence = new IndexeddbPersistence(roomId, newDoc);
@@ -23,7 +30,7 @@ async function sendFriendRequest(
   });
 
   const provider = new WebrtcProvider(roomId, newDoc, {
-    signaling: ["ws://" + signalingServerIp + ":4444"], // TODO le 4444 est à mettre dans le .env
+    signaling: [signalingServerIp],
   });
 
   provider.awareness.setLocalStateField("user", {
@@ -74,7 +81,7 @@ async function createYdocAndRoom(
   });
 
   const provider = new WebrtcProvider(roomId, newDoc, {
-    signaling: ["ws://" + signalingServerIp + ":4444"],
+    signaling: [signalingServerIp],
   });
 
   provider.awareness.setLocalStateField("user", {
