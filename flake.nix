@@ -19,6 +19,7 @@
             emscripten
             cmake
             mongoc
+            ansible
           ];
 
           buildInputs = with pkgs; [

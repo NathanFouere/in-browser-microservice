@@ -1,4 +1,4 @@
-const signalingServerIp = "192.168.1.18";
+const signalingServerIp = import.meta.env.VITE_WS_SERVER_ADDR;
 const sharedDocName = "shared-doc";
 const sharedRoomName = "shared-room";
 const personnalDocName = "personal-shared-doc";

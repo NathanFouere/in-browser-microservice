@@ -44,7 +44,8 @@ EM_ASYNC_JS(void, recreate_friends_documents, (const char* cur_user_name, const 
     }
 
     // Permet d'avoir un roomId unique pour chaque paire d'utilisateurs
-    const roomId = [cur_user_id, follow_id].sort();
+    console.log("Creating room for friendId", friendId, "and current userId", myUserId, "in social graph handler");
+    const roomId = [myUserId, friendId].sort().join("-");
 
     try {
       await Module.createYdocAndRoom(

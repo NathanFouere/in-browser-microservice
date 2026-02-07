@@ -1,3 +1,41 @@
+# In-browser microservices
+
+The goal of this project is to port a microservices-based application (a social network) to the browser (using Emscripten), and to study the performance of the resulting port compared to the server-side version.
+
+The application ported to the browser is the Social Network application from the DeathStarBench benchmark suite:
+
+Repository: https://github.com/delimitrou/DeathStarBench
+Application: socialNetwork microservices application
+
+## Déploiement
+
+```bash
+ ansible-playbook install-dependencies.yaml -i inventories/main.yaml --ask-vault-pass
+ ansible-playbook deploy-app.yaml -i inventories/main.yaml --ask-vault-pass
+```
+
+## Développement
+
+On build d'abord
+```bash
+nix develop
+./build-for-client.sh
+```
+
+On lance ensuite le serveur WebSocket dans le repertorie ws-server
+
+```bash
+PORT=4444 node server.js
+```
+
+Ensuite on configure le .env en mettant l'ip de notre server websocket dans la variable "VITE_WS_SERVER_ADDR" dans le repertoire "convertedClient". (exemple : VITE_WS_SERVER_ADDR: ws://192.168.1.222:4444)
+
+On peut ensuite lancer vite en dev dans le même repertoire
+
+```bash
+npm run dev
+```
+
 ## Compiler pour le client
 
 Il faut lancer le script build-for-client avec la commande `./build-for-client.sh`
