@@ -11,7 +11,6 @@ import AnnuaireService from "./script/annuaire-service.js";
 import { sendFriendRequest, createYdocAndRoom } from "./script/utils.js";
 import { sharedRoomName, personnalRoomName } from "./script/consts";
 
-// Wait for IndexedDB to load data into ydoc
 await persistence.whenSynced;
 
 var module = await Module();

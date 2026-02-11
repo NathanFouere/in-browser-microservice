@@ -1,14 +1,29 @@
 import di from "../di.js";
-import { persistence, personnalPersistence } from "./yjs-default.js";
 
 window.clearDatabase = async () => {
     if (!confirm("Are you sure you want to DELETE ALL DATA? This cannot be undone.")) return;
     
     console.log("Clearing IndexedDB...");
     try {
-        await persistence.clearData();
-        await personnalPersistence.clearData();
-        console.log("Data cleared. Reloading...");
+        // Clear all Yjs persistence stores (shared-doc, personal-shared-doc, and per-friend docs)
+        const connections = di.module.connections;
+        for (const key of Object.keys(connections)) {
+            const conn = connections[key];
+            if (conn.persistence) {
+                console.log(`Clearing persistence for connection: ${key}`);
+                await conn.persistence.clearData();
+            }
+        }
+
+        // Clear the "store" IndexedDB (friends list used by SocialGraphHandler)
+        await new Promise((resolve, reject) => {
+            const req = indexedDB.deleteDatabase("store");
+            req.onsuccess = () => { console.log("Deleted 'store' database"); resolve(); };
+            req.onerror = () => reject(req.error);
+            req.onblocked = () => { console.warn("'store' database delete blocked"); resolve(); };
+        });
+
+        console.log("All data cleared. Reloading...");
         window.location.reload();
     } catch (e) {
         console.error("Failed to clear data:", e);
@@ -40,9 +55,6 @@ window.runBenchmark = async (numberOfPosts = 10) => {
     } catch (e) {
         console.error(`[Benchmark] Failed to create post #${i+1}:`, e);
     }
-    
-    // Optional: yield to UI thread every so often to avoid freezing browser on large datasets
-    if (i % 50 === 0) await new Promise(r => setTimeout(r, 0));
   }
 
   const endTime = performance.now();
@@ -52,14 +64,4 @@ window.runBenchmark = async (numberOfPosts = 10) => {
   
   // Reload to see posts if needed (disabled for pure timing measurement, enable manually or call window.location.reload())
   console.log("Reload the page to see the new posts: window.location.reload()");
-};
-
-// Tool to just measure rendering of current posts without adding new ones
-window.measureRendering = () => {
-  console.log("Forcing timeline re-render to measure UI performance...");
-  if (window.showTimeline) {
-    window.showTimeline("main");
-  } else {
-    console.error("showTimeline function not found on window object.");
-  }
 };

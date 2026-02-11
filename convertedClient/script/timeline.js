@@ -18,42 +18,16 @@ export function setupRemoteObserver() {
         const loggedUser = di.sessionStorageUserService.getLoggedUser();
         if (!loggedUser) return;
 
-        let hasRelevantPost = false;
-        
-        try {
-            // Fetch fresh friend list from C++ SocialGraph
-            const friendsVector = di.socialGraphHandler.GetFriends(loggedUser.userid);
-            const friendIds = new Set();
-            for(let i=0; i<friendsVector.size(); i++) {
-                friendIds.add(friendsVector.get(i));
-            }
-             friendsVector.delete(); 
-             friendIds.add(loggedUser.userid); // Include self if needed
-
-             // Check if any of the added posts are from friends
-             for (const content of addedPosts) {
-                 if (content && content.creator && friendIds.has(Number(content.creator.user_id))) {
-                     hasRelevantPost = true;
-                     break;
-                 }
-             }
-
-        } catch (e) {
-            console.warn("[Timeline] Error checking friends for notification:", e);
-            return; 
-        }
-
-        if (!hasRelevantPost) return;
-
         // Logic: Increment Counter
         newRemotePostsCount += addedPosts.length;
         
         // UI Update
         const alertBox = document.getElementById('new-posts-alert');
-        const countSpan = document.getElementById('new-posts-count');
+        const messageSpan = document.getElementById('new-posts-message');
         
-        if (alertBox && countSpan) {
-            countSpan.innerText = newRemotePostsCount;
+        if (alertBox && messageSpan) {
+            const word = newRemotePostsCount > 1 ? "posts" : "post";
+            messageSpan.innerText = `🔔 ${newRemotePostsCount} nouveaux ${word} dispo`;
             alertBox.style.display = 'block';
             
             // Benchmark: Latency Measurement
@@ -105,7 +79,6 @@ export default function showTimeline(type, isLoadMore = false) {
   }
 
   let postsVector;
-  let isUserTimeline = false;
 
   console.log(`[Timeline] showTimeline called. Type: ${type}, IsLoadMore: ${isLoadMore}, Offset: ${currentOffset}`);
 
@@ -128,7 +101,6 @@ export default function showTimeline(type, isLoadMore = false) {
     }
   
   } else if (type == "user-timeline") {
-      isUserTimeline = true;
       try {
           const endIndex = currentOffset + LIMIT;
            // Assuming UserTimelineHandler might NOT need update yet, or was not requested.

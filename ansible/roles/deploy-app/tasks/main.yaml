@@ -2,16 +2,31 @@
   ansible.builtin.git:
     repo: "https://github.com/NathanFouere/in-browser-microservice"
     dest: "/root/in-browser-microservice"
-    version: main
+    version: benchmark
     force: yes
 
 - name: Générer .env
   ansible.builtin.template:
-    src: templates/.env.j2
+    src: .env.j2
     dest: /root/in-browser-microservice/convertedClient/.env
 
-- name: Start the application
-  community.docker.docker_compose_v2:
-    project_src: "/root/in-browser-microservice"
-    state: present
-    build: always
+- name: Ensure Docker service is running
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: yes
+
+- name: Tear down existing services (if any)
+  ansible.builtin.command: docker compose down
+  args:
+    chdir: /root/in-browser-microservice
+  register: docker_down
+  changed_when: docker_down.rc == 0
+  failed_when: false
+
+- name: Start the application (Force Build)
+  ansible.builtin.command: docker compose up -d --build --remove-orphans
+  args:
+    chdir: /root/in-browser-microservice
+  register: docker_up
+  changed_when: docker_up.rc == 0
