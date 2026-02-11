@@ -24,7 +24,7 @@
   changed_when: docker_down.rc == 0
   failed_when: false
 
-- name: Start the application (Force Build)
+- name: Start the application
   ansible.builtin.command: docker compose up -d --build --remove-orphans
   args:
     chdir: /root/in-browser-microservice
