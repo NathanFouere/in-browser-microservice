@@ -36,3 +36,9 @@
       - containerd.io
       - docker-compose-plugin
     state: present
+
+- name: Start and enable Docker service
+  ansible.builtin.service:
+    name: docker
+    state: started
+    enabled: yes

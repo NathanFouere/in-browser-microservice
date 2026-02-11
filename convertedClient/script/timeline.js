@@ -1,85 +1,193 @@
 import di from "../di.js";
 
 let postTemplate = null;
+let currentOffset = 0;
+const LIMIT = 10;
+let currentType = "main";
 const isOnIndexPage = window.location.pathname.endsWith("index.html");
 
-export default function showTimeline(type) {
-  if (isOnIndexPage) return;
-  const loggedUser = di.sessionStorageUserService.getLoggedUser();
 
-  if (type == "main") {
-    const cardBlock = document.getElementById("card-block");
-    if (!cardBlock) return;
+// Remote Posts Observer State
+let newRemotePostsCount = 0;
 
-    // Use cached template
-    if (!postTemplate) return;
+export function setupRemoteObserver() {
+    window.addEventListener("remote-post-received", (event) => {
+        const addedPosts = event.detail.posts;
+        if (!addedPosts || addedPosts.length === 0) return;
 
-    const onlyFriendsToggle = document.getElementById("only-friends-toggle");
-    const onlyFriends = onlyFriendsToggle ? onlyFriendsToggle.checked : false;
+        const loggedUser = di.sessionStorageUserService.getLoggedUser();
+        if (!loggedUser) return;
 
-    // Fetch posts (synchronous for now based on current impl)
-    const postsVector = di.homeTimelineHandler.ReadHomeTimeline(
-      loggedUser.userid,
-      0,
-      10,
-      onlyFriends,
-    );
-
-    const posts = [];
-    for (let i = 0; i < postsVector.size(); i++) {
-      posts.push(postsVector.get(i));
-    }
-
-    // Sort by timestamp based on toggle button
-    const sortBtn = document.getElementById("sort-toggle-btn");
-    const sortAsc = sortBtn
-      ? sortBtn.getAttribute("data-sort") === "asc"
-      : false;
-
-    posts.sort((a, b) => {
-      const valA = Number(a.timestamp);
-      const valB = Number(b.timestamp);
-      if (valA > valB) return sortAsc ? 1 : -1;
-      if (valA < valB) return sortAsc ? -1 : 1;
-      return 0;
+        // Logic: Increment Counter
+        newRemotePostsCount += addedPosts.length;
+        
+        // UI Update
+        const alertBox = document.getElementById('new-posts-alert');
+        const messageSpan = document.getElementById('new-posts-message');
+        
+        if (alertBox && messageSpan) {
+            const word = newRemotePostsCount > 1 ? "posts" : "post";
+            messageSpan.innerText = `🔔 ${newRemotePostsCount} nouveaux ${word} dispo`;
+            alertBox.style.display = 'block';
+            
+            // Benchmark: Latency Measurement
+            // We use performance.now() as "received time" approximation 
+            // since the event is dispatched immediately on receipt in utils.js
+            const tReceived = performance.now();
+            
+            requestAnimationFrame(() => {
+                const tDisplayed = performance.now();
+                console.log(`[Latency] Remote Post -> Notification: ${(tDisplayed - tReceived).toFixed(2)} ms (Count: ${newRemotePostsCount})`);
+            });
+        }
     });
 
-    // Clear current posts
-    cardBlock.innerHTML = "";
+    console.log("[Timeline] Remote observer setup via Event Bus.");
 
-    for (const p of posts) {
-      const date = new Date(Number(p.timestamp) * 1000);
 
-      const clone = postTemplate.cloneNode(true);
-      clone.style.display = "block";
-
-      // Fill data
-      clone.querySelector(".post-text").innerText = p.text;
-      clone.querySelector(".post-time").innerText = date.toString();
-
-      const creatorEl = clone.querySelector(".post-creator");
-      if (creatorEl) creatorEl.innerText = p.creator.username;
-
-      // Hook buttons
-      const deleteBtn = clone.querySelector(".delete-post-btn");
-      if (deleteBtn) {
-        deleteBtn.addEventListener("click", () => {
-          $("#deletePostModal").data("post-id", p.post_id).modal("show");
+    // Setup Click Listener for Refresh
+    const alertBox = document.getElementById('new-posts-alert');
+    if (alertBox) {
+        alertBox.addEventListener('click', () => {
+            console.log("Refreshing timeline with new posts...");
+            newRemotePostsCount = 0;
+            alertBox.style.display = 'none';
+            showTimeline("main");
         });
-      }
-
-      const editBtn = clone.querySelector(".edit-post-btn");
-      if (editBtn) {
-        editBtn.addEventListener("click", () => {
-          $("#editPostModal").data("post-id", p.post_id);
-          const editPostTextarea = document.getElementById("editPostTextarea");
-          editPostTextarea.value = p.text;
-          $("#editPostModal").modal("show");
-        });
-      }
-
-      cardBlock.appendChild(clone);
     }
+}
+
+// Initialize Observer on load
+setupRemoteObserver();
+
+export default function showTimeline(type, isLoadMore = false) {
+  const loggedUser = di.sessionStorageUserService.getLoggedUser();
+  
+  if (!isLoadMore) {
+      currentOffset = 0;
+      currentType = type;
+  }
+
+  const cardBlock = document.getElementById("card-block");
+  if (!cardBlock) return;
+  if (!postTemplate) return;
+
+  // Cleanup existing Load More button if resetting
+  if (!isLoadMore) {
+      const existingBtn = document.getElementById('load-more-btn');
+      if (existingBtn) existingBtn.remove();
+  }
+
+  let postsVector;
+
+  console.log(`[Timeline] showTimeline called. Type: ${type}, IsLoadMore: ${isLoadMore}, Offset: ${currentOffset}`);
+
+  if (type == "main") {
+
+    // Sort logic
+    const sortBtn = document.getElementById('sort-toggle-btn');
+    const sortAsc = sortBtn ? sortBtn.getAttribute('data-sort') === 'asc' : false;
+    const sortOrder = sortAsc ? "asc" : "desc";
+
+    // Fetch posts with offset, limit AND sort order
+    try {
+        const endIndex = currentOffset + LIMIT;
+        //Only friends is always true because of sharding
+        postsVector = di.homeTimelineHandler.ReadHomeTimeline(loggedUser.userid, currentOffset, endIndex, sortOrder);
+        console.log(`[Timeline] ReadHomeTimeline(${currentOffset}, ${endIndex}, ${sortOrder}) returned ${postsVector.size()} posts.`);
+    } catch (e) {
+        console.error("[Timeline] Error calling ReadHomeTimeline:", e);
+        return;
+    }
+  
+  } else if (type == "user-timeline") {
+      try {
+          const endIndex = currentOffset + LIMIT;
+           // Assuming UserTimelineHandler might NOT need update yet, or was not requested.
+           // Focusing on HomeTimeline as requested. If needed, we can update UserTimeline later.
+           // Keeping existing call for UserTimeline
+          postsVector = di.userTimelineHandler.ReadUserTimeline(loggedUser.userid, currentOffset, endIndex);
+          console.log(`[Timeline] ReadUserTimeline(${currentOffset}, ${endIndex}) returned ${postsVector.size()} posts.`);
+      } catch (e) {
+          console.error("[Timeline] Error calling ReadUserTimeline:", e);
+          return;
+      }
+  } else {
+      console.warn(`[Timeline] Unknown type: ${type}`);
+      return;
+  }
+
+  const posts = [];
+  for (let i = 0; i < postsVector.size(); i++) {
+    posts.push(postsVector.get(i));
+  }
+  
+  if (!isLoadMore) {
+      const renderLabel = `Timeline Render (${posts.length} posts)`;
+      console.time(renderLabel);
+      cardBlock.replaceChildren(); 
+      console.timeEnd(renderLabel);
+  }
+
+  // Append new posts
+  for (const p of posts) {
+    const date = new Date(Number(p.timestamp) * 1000);
+
+    const clone = postTemplate.cloneNode(true);
+    clone.style.display = "block";
+
+    // Fill data
+    clone.querySelector(".post-text").innerText = p.text;
+    clone.querySelector(".post-time").innerText = date.toString();
+
+    const creatorEl = clone.querySelector(".post-creator");
+    if (creatorEl) {
+        if (!p.creator || !p.creator.username) {
+            console.warn("[Timeline] Missing creator/username for post:", p.post_id, p);
+            creatorEl.innerText = "Unknown User";
+        } else {
+            creatorEl.innerText = p.creator.username;
+        }
+    }
+
+    // Hook buttons
+    const deleteBtn = clone.querySelector(".delete-post-btn");
+    if (deleteBtn) {
+      deleteBtn.addEventListener('click', () => {
+        $('#deletePostModal').data('post-id', p.post_id).modal('show');
+      });
+    }
+
+    const editBtn = clone.querySelector(".edit-post-btn");
+    if (editBtn) {
+      editBtn.addEventListener('click', () => {
+        $('#editPostModal').data('post-id', p.post_id);
+        const editPostTextarea = document.getElementById('editPostTextarea');
+        editPostTextarea.value = p.text;
+        $('#editPostModal').modal('show');
+      });
+    }
+
+    cardBlock.appendChild(clone);
+  }
+
+  // Force reflow
+  cardBlock.scrollTop; 
+
+  // Handle Load More Button
+  let loadMoreBtn = document.getElementById('load-more-btn');
+  if (loadMoreBtn) loadMoreBtn.remove();
+
+  if (posts.length >= LIMIT) {
+      loadMoreBtn = document.createElement('button');
+      loadMoreBtn.id = 'load-more-btn';
+      loadMoreBtn.className = 'btn btn-secondary btn-block mt-3 mb-3';
+      loadMoreBtn.innerText = 'Load More';
+      loadMoreBtn.onclick = () => {
+          currentOffset += LIMIT;
+          showTimeline(currentType, true);
+      };
+      cardBlock.appendChild(loadMoreBtn);
   }
 }
 
@@ -107,15 +215,8 @@ function initTimeline() {
 
   showTimeline("main");
 
-  const toggle = document.getElementById("only-friends-toggle");
-  if (toggle) {
-    toggle.addEventListener("change", () => {
-      showTimeline("main");
-    });
-  }
-
-  $("#confirmDeletePostBtn").on("click", () => {
-    const postId = $("#deletePostModal").data("post-id");
+  $('#confirmDeletePostBtn').on('click', () => {
+    const postId = $('#deletePostModal').data('post-id');
     if (postId) {
       di.postStorageHandler.DeletePost(postId);
       $("#deletePostModal").modal("hide");

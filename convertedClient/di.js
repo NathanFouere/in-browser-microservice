@@ -11,6 +11,8 @@ import AnnuaireService from "./script/annuaire-service.js";
 import { sendFriendRequest, createYdocAndRoom } from "./script/utils.js";
 import { sharedRoomName, personnalRoomName } from "./script/consts";
 
+await persistence.whenSynced;
+
 var module = await Module();
 
 // sert à rendre disponible globalement dans le module emscripten
@@ -44,6 +46,50 @@ const sessionStorageUserService = await new module.SessionStorageUserService();
 const socialGraphHandler = await new module.SocialGraphHandler(
   sessionStorageUserService,
 );
+
+// FIX: Restore Social Graph in C++ memory from IndexedDB
+// The C++ constructor only restores Yjs rooms but doesn't populate the in-memory graph.
+let loggedUser = null;
+try {
+  loggedUser = sessionStorageUserService.getLoggedUser();
+} catch (e) {
+  // No user logged in, skip restoration
+}
+
+if (loggedUser) {
+    try {
+        const db = await new Promise((resolve, reject) => {
+            const req = indexedDB.open("store", 2);
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        });
+
+        if (db.objectStoreNames.contains("friends")) {
+            const friends = await new Promise((resolve, reject) => {
+                const tx = db.transaction("friends", "readonly");
+                const store = tx.objectStore("friends");
+                const req = store.getAll();
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+
+            console.log(`[di.js] Restoring ${friends.length} friends to SocialGraphHandler...`);
+            
+            // Ensure logged user is in the graph
+            socialGraphHandler.InsertUser(loggedUser.userid, loggedUser.username);
+
+            for (const friend of friends) {
+                // Ensure friend is in the graph
+                socialGraphHandler.InsertUser(friend.friend_id, friend.friend_username);
+                // Establish follow relationship
+                socialGraphHandler.Follow(loggedUser.userid, friend.friend_id);
+            }
+        }
+    } catch (e) {
+        console.error("[di.js] Failed to restore social graph from IndexedDB:", e);
+    }
+}
+
 const userHandler = await new module.UserHandler(
   socialGraphHandler,
   uniqueIdHandler,

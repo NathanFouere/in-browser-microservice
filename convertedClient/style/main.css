@@ -112,3 +112,24 @@ body {
 .hide {
     display: none;
 }
+
+#new-posts-alert {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 1050;
+    margin: 0;
+    padding: 10px 20px;
+    border-radius: 50px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    background-color: #1f85de;
+    color: white;
+    border: none;
+    transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    font-weight: 500;
+}
+
+#new-posts-alert:hover {
+    transform: translateY(-5px);
+    background-color: #1a71c2;
+}
