@@ -14,7 +14,7 @@ json Post::toJson() const {
     j["creator"] = creator.toJson();
     j["text"] = text;
     j["timestamp"] = timestamp;
-    j["post_type"] = post_type; 
+    j["post_type"] = post_type;
     return j;
 }
 
@@ -79,7 +79,7 @@ EMSCRIPTEN_BINDINGS(post_module) {
 
     register_vector<UserMention>("UserMentionList");
 
-    register_vector<Post>("PostList");
+    register_vector<Post>("PostList"); // cf . https://emscripten.org/docs/porting/connecting_cpp_and_javascript/embind.html
     register_vector<std::int64_t>("IntList");
     register_vector<std::string>("StringList");
     register_map<std::string, std::string>("StringStringMap");

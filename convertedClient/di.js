@@ -8,7 +8,11 @@ import {
 } from "./script/yjs-default.js";
 import ShardingService from "./script/sharding-service.js";
 import AnnuaireService from "./script/annuaire-service.js";
-import { sendFriendRequest, createYdocAndRoom } from "./script/utils.js";
+import {
+  sendFriendRequest,
+  createYdocAndRoom,
+  createPeerJsConnection,
+} from "./script/utils.js";
 import { sharedRoomName, personnalRoomName } from "./script/consts";
 import PeerjsService from "./script/peerjs-service.js";
 
@@ -22,6 +26,7 @@ module.personnalDoc = personnalDoc;
 module.personnalPersistence = personnalPersistence;
 module.sendFriendRequest = sendFriendRequest;
 module.createYdocAndRoom = createYdocAndRoom;
+module.createPeerJsConnection = createPeerJsConnection;
 
 module.connections = {};
 module.connections[sharedRoomName] = {
@@ -38,7 +43,6 @@ module.connections[personnalRoomName] = {
   is_personal: true,
 };
 
-// TODO => tout regrouper dans un promise.all
 const uniqueIdHandler = await new module.UniqueIdHandler("abc");
 const mediaHandler = await new module.MediaHandler();
 const sessionStorageUserService = await new module.SessionStorageUserService();
@@ -70,6 +74,9 @@ const composePostHandler = await new module.ComposePostHandler(
   postStorageHandler,
 );
 const annuaireService = new AnnuaireService(sharedDoc.clientID, provider);
+
+const peerjsService = new PeerjsService();
+module.peerjsService = peerjsService;
 const shardingService = new ShardingService(
   sharedDoc,
   persistence,
@@ -77,9 +84,8 @@ const shardingService = new ShardingService(
   annuaireService,
   module,
   sessionStorageUserService,
+  peerjsService,
 );
-const peerjsService = new PeerjsService();
-module.peerjsService = peerjsService;
 
 const di = {
   uniqueIdHandler: uniqueIdHandler,

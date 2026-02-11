@@ -1,5 +1,6 @@
 import di from "../di.js";
 
+const loggedUser = di.sessionStorageUserService.getLoggedUser();
 function followHandler(event) {
   event.preventDefault();
 
@@ -32,6 +33,9 @@ function fillLoggedUser() {
   annuaireBlock.innerHTML = "";
 
   for (const user of users) {
+    if (user.userId == loggedUser.userid) {
+      continue;
+    }
     const clone = userTemplate.cloneNode(true);
     clone.style.display = "block";
     const usernameSpan = clone.querySelector(".username-span");
@@ -46,6 +50,27 @@ function fillLoggedUser() {
         onFollowLoggedUserButtonClick(user.userId, user.username);
       });
     }
+
+    const synchroniseBtn = clone.querySelector(".synchronize-db-user-btn");
+    if (synchroniseBtn) {
+      synchroniseBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        console.log("Synchronizing with user", user.username);
+        di.module.createPeerJsConnection(loggedUser.userid, user.userId);
+        const postsDb = di.postStorageHandler.GetAllPosts();
+        console.log(
+          "user db of post is " +
+            postsDb.get(0).post_id +
+            postsDb.get(0).text +
+            " length" +
+            postsDb.size(),
+        );
+
+        di.peerjsService.sendMessage("j envoie un message");
+        di.peerjsService.sendMessage(postsDb);
+      });
+    }
+
     annuaireBlock.appendChild(clone);
   }
 }

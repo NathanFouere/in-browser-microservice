@@ -4,12 +4,17 @@ export default class PeerjsService {
   constructor() {
     this.peer = new Peer();
     this.conn = null;
+
+    console.log("peer js service initialized");
   }
 
   connectToPeer(peerId) {
     this.conn = this.peer.connect(peerId);
     this.conn.on("open", () => {
       console.log("Connected to peer: " + peerId);
+    });
+    this.conn.on("data", (data) => {
+      console.log("Received message: " + data);
     });
   }
 

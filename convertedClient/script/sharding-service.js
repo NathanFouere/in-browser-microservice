@@ -8,6 +8,7 @@ export default class ShardingService {
     annuaireService,
     module,
     sessionStorageUserService,
+    peerjsService,
   ) {
     this.sharedDoc = sharedDoc;
     this.persistence = persistence;
@@ -15,6 +16,7 @@ export default class ShardingService {
     this.annuaireService = annuaireService;
     this.module = module;
     this.sessionStorageUserService = sessionStorageUserService;
+    this.peerjsService = peerjsService;
     console.log("ShardingService initialized");
     this.provider.awareness.on("change", this.handleAwarenessChange);
   }
@@ -74,11 +76,43 @@ export default class ShardingService {
           );
         }
       }
+
+      if (clientState?.establish_peer_js_connection != undefined) {
+        const myUserId = this.sessionStorageUserService.getLoggedUser().userid;
+        if (
+          clientState.establish_peer_js_connection.targeted_user_id ==
+          String(myUserId)
+        ) {
+          return;
+        }
+        const peerId =
+          [myUserId, clientState.establish_peer_js_connection.source_user_id]
+            .sort()
+            .join("-") + "peer-connection";
+        console.log("Establishing peer js connection with peer id ", peerId);
+        this.peerjsService.connectToPeer(peerId);
+      }
     }
 
     for (const clientID of updated) {
       const clientState = states.get(clientID);
       console.log("Client updated with state", clientState);
+
+      if (clientState?.establish_peer_js_connection != undefined) {
+        const myUserId = this.sessionStorageUserService.getLoggedUser().userid;
+        if (
+          clientState.establish_peer_js_connection.targeted_user_id ==
+          String(myUserId)
+        ) {
+          return;
+        }
+        const peerId =
+          [myUserId, clientState.establish_peer_js_connection.source_user_id]
+            .sort()
+            .join("-") + "peer-connection";
+        console.log("Establishing peer js connection with peer id ", peerId);
+        this.peerjsService.connectToPeer(peerId);
+      }
       if (clientState?.user != undefined) {
         this.annuaireService.communicateListOfUsers();
         this.annuaireService.addLoggedUser(

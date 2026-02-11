@@ -139,6 +139,27 @@ std::vector<Post> PostStorageHandler::GetAllPosts() {
     return this->posts;
 }
 
+std::string PostStorageHandler::GetAllPostsJsonFormat() {
+    this->posts.clear();
+
+    char* rawJsonPtr = get_posts_from_indexed_db();
+    std::string resultJson = "[]";
+
+    if (rawJsonPtr != nullptr) {
+      resultJson = std::string(rawJsonPtr);
+
+        json postsJson = json::parse(rawJsonPtr);
+        for (json postJson : postsJson) {
+          this->posts.push_back(Post::fromJson(postJson));
+        }
+
+
+      free(rawJsonPtr);
+    }
+
+    return resultJson;
+}
+
 
 void PostStorageHandler::ShowPostsPresence() {
     auto postsFromIndexedDb = get_posts_from_indexed_db();
@@ -198,5 +219,6 @@ EMSCRIPTEN_BINDINGS(post_storage_Module) {
       .function("StorePost", &PostStorageHandler::StorePost)
       .function("DeletePost", &PostStorageHandler::DeletePost)
       .function("ShowPostsPresence", &PostStorageHandler::ShowPostsPresence)
+      .function("GetAllPosts", &PostStorageHandler::GetAllPosts)
       .function("EditPostText", &PostStorageHandler::EditPostText);
 }

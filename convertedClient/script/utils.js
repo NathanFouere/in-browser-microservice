@@ -4,6 +4,23 @@ import { IndexeddbPersistence } from "y-indexeddb";
 import di from "../di.js";
 
 import { signalingServerIp } from "./consts";
+
+function createPeerJsConnection(cur_user_id, target_user_id) {
+  console.log(
+    "Create peer js connection with cur_user_id ",
+    cur_user_id,
+    "and target_user_id",
+    target_user_id,
+  );
+  di.module.mainProvider.awareness.setLocalStateField(
+    "establish_peer_js_connection",
+    {
+      targeted_user_id: target_user_id,
+      source_user_id: cur_user_id.toString(),
+    },
+  );
+}
+
 async function sendFriendRequest(
   cur_user_name,
   cur_user_id,
@@ -107,4 +124,4 @@ async function createYdocAndRoom(
   console.log("Created new Y.Doc and room for userId:", userId);
 }
 
-export { sendFriendRequest, createYdocAndRoom };
+export { sendFriendRequest, createYdocAndRoom, createPeerJsConnection };
