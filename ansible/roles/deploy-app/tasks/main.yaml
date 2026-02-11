@@ -16,17 +16,9 @@
     state: started
     enabled: yes
 
-- name: Tear down existing services (if any)
-  ansible.builtin.command: docker compose down
-  args:
-    chdir: /root/in-browser-microservice
-  register: docker_down
-  changed_when: docker_down.rc == 0
-  failed_when: false
-
 - name: Start the application
-  ansible.builtin.command: docker compose up -d --build --remove-orphans
-  args:
-    chdir: /root/in-browser-microservice
-  register: docker_up
-  changed_when: docker_up.rc == 0
+  community.docker.docker_compose_v2:
+    project_src: "/root/in-browser-microservice"
+    state: present
+    build: always
+    remove_orphans: yes
