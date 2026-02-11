@@ -10,6 +10,7 @@ import ShardingService from "./script/sharding-service.js";
 import AnnuaireService from "./script/annuaire-service.js";
 import { sendFriendRequest, createYdocAndRoom } from "./script/utils.js";
 import { sharedRoomName, personnalRoomName } from "./script/consts";
+import PeerjsService from "./script/peerjs-service.js";
 
 var module = await Module();
 
@@ -77,6 +78,8 @@ const shardingService = new ShardingService(
   module,
   sessionStorageUserService,
 );
+const peerjsService = new PeerjsService();
+module.peerjsService = peerjsService;
 
 const di = {
   uniqueIdHandler: uniqueIdHandler,
@@ -95,6 +98,7 @@ const di = {
   annuaireService: annuaireService,
   module: module,
   personnalDoc: personnalDoc,
+  peerjsService: peerjsService,
 };
 
 export default di;
