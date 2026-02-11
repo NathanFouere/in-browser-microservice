@@ -53,27 +53,22 @@ function fillLoggedUser() {
 
     const synchroniseBtn = clone.querySelector(".synchronize-db-user-btn");
     if (synchroniseBtn) {
-      synchroniseBtn.addEventListener(
-        "click",
-        (e) =>
-          async function () {
-            e.stopPropagation();
-            console.log("Synchronizing with user", user.username);
-            di.module.createPeerJsConnection(loggedUser.userid, user.userId);
-            await new Promise((resolve) => setTimeout(resolve, 100000));
-            const postsDb = di.postStorageHandler.GetAllPosts();
-            console.log(
-              "user db of post is " +
-                postsDb.get(0).post_id +
-                postsDb.get(0).text +
-                " length" +
-                postsDb.size(),
-            );
+      synchroniseBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        console.log("Synchronizing with user", user.username);
+        di.module.createPeerJsConnection(loggedUser.userid, user.userId);
+        const postsDb = di.postStorageHandler.GetAllPosts();
+        console.log(
+          "user db of post is " +
+            postsDb.get(0).post_id +
+            postsDb.get(0).text +
+            " length" +
+            postsDb.size(),
+        );
 
-            di.peerjsService.sendMessage("j envoie un message");
-            di.peerjsService.sendMessage(postsDb);
-          },
-      );
+        di.peerjsService.sendMessage("j envoie un message" + Date.now());
+        di.peerjsService.sendMessage(postsDb);
+      });
     }
 
     annuaireBlock.appendChild(clone);
