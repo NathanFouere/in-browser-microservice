@@ -21,6 +21,8 @@
       if (!response.ok) throw new Error(`Status ${response.status}`);
       html = await response.text();
       
+      // DEBUG: Log the fetched HTML to see if it's correct
+      console.log("Fetched benchmark-ui.html content:", html);
 
       const parser = new DOMParser();
       const doc = parser.parseFromString(html, 'text/html');
@@ -30,7 +32,7 @@
           const importedNode = document.importNode(dashboardElement, true);
           document.body.appendChild(importedNode);
       } else {
-          console.error("Could not find #benchmark-dashboard in the fetched HTML.");
+          console.error("Could not find #benchmark-dashboard in the fetched HTML. Content received:", html);
       }
 
       // Attach Event Listeners
