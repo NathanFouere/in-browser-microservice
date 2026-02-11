@@ -81,7 +81,7 @@ export default class ShardingService {
         console.log("received establish_peer_js_connection");
         const myUserId = this.sessionStorageUserService.getLoggedUser().userid;
         if (
-          clientState.establish_peer_js_connection.targeted_user_id ==
+          clientState.establish_peer_js_connection.targeted_user_id !=
           String(myUserId)
         ) {
           return;
@@ -104,7 +104,7 @@ export default class ShardingService {
 
         const myUserId = this.sessionStorageUserService.getLoggedUser().userid;
         if (
-          clientState.establish_peer_js_connection.targeted_user_id ==
+          clientState.establish_peer_js_connection.targeted_user_id !=
           String(myUserId)
         ) {
           return;
