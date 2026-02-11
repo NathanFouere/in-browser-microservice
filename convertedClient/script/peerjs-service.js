@@ -9,6 +9,7 @@ export default class PeerjsService {
   }
 
   connectToPeer(peerId) {
+    console.log("Connecting to peer with id: " + peerId);
     this.conn = this.peer.connect(peerId);
     this.conn.on("open", () => {
       console.log("Connected to peer: " + peerId);
