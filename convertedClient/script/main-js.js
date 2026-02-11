@@ -65,9 +65,10 @@ function fillLoggedUser() {
             " length" +
             postsDb.size(),
         );
-
-        di.peerjsService.sendMessage("j envoie un message" + Date.now());
-        di.peerjsService.sendMessage(postsDb);
+        setTimeout(() => {
+          di.peerjsService.sendMessage("j envoie un message");
+          di.peerjsService.sendMessage(postsDb);
+        }, 10000);
       });
     }
 
