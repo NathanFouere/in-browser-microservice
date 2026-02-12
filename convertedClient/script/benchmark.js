@@ -61,7 +61,14 @@ window.runBenchmark = async (numberOfPosts = 10) => {
   const duration = endTime - startTime;
   console.log(`Benchmark finished in ${duration.toFixed(2)}ms`);
   console.log(`Average time per post: ${(duration / numberOfPosts).toFixed(2)}ms`);
-  
-  // Reload to see posts if needed (disabled for pure timing measurement, enable manually or call window.location.reload())
-  console.log("Reload the page to see the new posts: window.location.reload()");
+  console.log(`Posts sent. To see latency metrics, ask the RECEIVER to click "Show Stats" or "Export CSV".`);
+};
+
+// Show latency statistics in console
+window.showLatencyStats = () => {
+  if (!window.postLatencyMetrics) {
+    console.error("Latency metrics not initialized. Are you on the main page?");
+    return;
+  }
+  return window.showLatencySummary();
 };

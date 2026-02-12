@@ -81,6 +81,9 @@ EM_JS(char *, get_posts_from_indexed_db, (), {
 
 EM_JS(void, save_post_in_indexed_db, (const char *post_json_cstr), {
   const post = JSON.parse(UTF8ToString(post_json_cstr));
+  
+  // Inject send timestamp in milliseconds (precise tracking)
+  post.send_timestamp_ms = Date.now();
 
   if (!Module.connections) {
       return;
@@ -98,7 +101,7 @@ EM_JS(void, save_post_in_indexed_db, (const char *post_json_cstr), {
 
     const postsArray = connection.doc.getArray("posts");
     postsArray.push([post]);
-    console.log(`Post saved for user ${userId}`);
+    console.log(`Post ${post.post_id} sent at ${post.send_timestamp_ms}ms to user ${userId}`);
   }
 });
 

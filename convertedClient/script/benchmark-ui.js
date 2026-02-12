@@ -41,6 +41,13 @@
       attachListener('btn-100-posts', () => window.runBenchmark(100));
       attachListener('btn-1000-posts', () => window.runBenchmark(1000));
       attachListener('btn-clear-db', () => window.clearDatabase());
+      attachListener('btn-show-stats', () => window.showLatencyStats());
+      attachListener('btn-export-csv', () => window.exportLatencyCSV());
+      attachListener('btn-reset-metrics', () => {
+        if (confirm("Reset all latency metrics? This cannot be undone.")) {
+          window.resetLatencyMetrics();
+        }
+      });
 
     } catch (e) {
       console.error('Error loading Benchmark Dashboard:', e);
