@@ -15,3 +15,7 @@ compile_commands.json
 *_prefix/
 convertMicroServices.js
 convertMicroServices.wasm
+
+# CMake
+CMakeFiles/
+cmake-build-debug/

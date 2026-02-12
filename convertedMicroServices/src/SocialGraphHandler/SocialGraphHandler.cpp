@@ -235,6 +235,15 @@ std::vector<int64_t> SocialGraphHandler::GetFriends(const int64_t user_id) {
   return {};
 }
 
+bool SocialGraphHandler::IsFollowing(int64_t user_id, int64_t followee_id) {
+  UserGraph *ug = GetUserGraph(user_id);
+  if (!ug)
+    return false;
+
+  return std::find(ug->followees.begin(), ug->followees.end(), followee_id) !=
+         ug->followees.end();
+}
+
 void SocialGraphHandler::SaveFollow(const std::string user_id, const std::string username) {
     auto loggedUser = this->sessionStorageUserService.getLoggedUser();
     save_follow_in_indexed_cb(loggedUser.getUsername().c_str(), std::to_string(loggedUser.getUserId()).c_str(), user_id.c_str(), username.c_str());
@@ -244,6 +253,17 @@ void SocialGraphHandler::SaveFollow(const std::string user_id, const std::string
 void SocialGraphHandler::SaveFollowWithoutSendingFriendRequest(const std::string user_id, const std::string username) {
     auto loggedUser = this->sessionStorageUserService.getLoggedUser();
     save_follow_in_indexed_without_sending_friend_request(loggedUser.getUsername().c_str(), std::to_string(loggedUser.getUserId()).c_str(), user_id.c_str(), username.c_str());
+}
+
+void SocialGraphHandler::SaveUnfollow(const std::string user_id,
+                                      const std::string username) {
+  auto loggedUser = this->sessionStorageUserService.getLoggedUser();
+
+  // Convert string IDs to int64_t
+  int64_t logged_user_id = loggedUser.getUserId();
+  int64_t followee_id = std::stoll(user_id);
+
+  Unfollow(logged_user_id, followee_id);
 }
 
 void SocialGraphHandler::Follow(int64_t user_id, int64_t followee_id) {
@@ -351,10 +371,10 @@ EMSCRIPTEN_BINDINGS(social_graph_module) {
       .function("InsertUser", &SocialGraphHandler::InsertUser)
       .function("GetFollowers", &SocialGraphHandler::GetFollowers)
       .function("GetFollowees", &SocialGraphHandler::GetFollowees)
-      .function("GetFriends", &SocialGraphHandler::GetFriends)
+      .function("IsFollowing", &SocialGraphHandler::IsFollowing)
       .function("SaveFollow", &SocialGraphHandler::SaveFollow)
       .function("SaveFollowWithoutSendingFriendRequest", &SocialGraphHandler::SaveFollowWithoutSendingFriendRequest)
-      .function("Follow", &SocialGraphHandler::Follow)
+      .function("SaveUnfollow", &SocialGraphHandler::SaveUnfollow)
       .function("Unfollow", &SocialGraphHandler::Unfollow)
       .function("FollowWithUsername", &SocialGraphHandler::FollowWithUsername)
       .function("UnfollowWithUsername",

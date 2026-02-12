@@ -16,7 +16,7 @@ using nlohmann::json;
 class Post {
   public:
     Post() noexcept
-      : post_id(0), creator(), text(), timestamp(0), post_type(PostType::POST) {}
+      : post_id(0), creator(), text(), timestamp(0), send_timestamp_ms(0), post_type(PostType::POST) {}
     static Post fromJson(const json& j);
     json toJson() const;
 
@@ -38,6 +38,9 @@ class Post {
     int64_t getTimestamp() const;
     void setTimestamp(int64_t t);
 
+    int64_t getSendTimestampMs() const;
+    void setSendTimestampMs(int64_t t);
+
     PostType::type getPostType() const;
     void setPostType(PostType::type pt);
 
@@ -45,5 +48,6 @@ class Post {
     Creator creator;
     std::string text;
     int64_t timestamp;
+    int64_t send_timestamp_ms;
     PostType::type post_type;
 };

@@ -14,6 +14,7 @@ json Post::toJson() const {
     j["creator"] = creator.toJson();
     j["text"] = text;
     j["timestamp"] = timestamp;
+    j["send_timestamp_ms"] = send_timestamp_ms;
     j["post_type"] = post_type; 
     return j;
 }
@@ -26,6 +27,14 @@ Post Post::fromJson(const json& j) {
     post->setCreator(creator);
     post->setText(j["text"]);
     post->setTimestamp(j["timestamp"].get<int>());
+    
+    // Handle send_timestamp_ms (optional for backward compatibility)
+    if (j.contains("send_timestamp_ms")) {
+        post->setSendTimestampMs(j["send_timestamp_ms"].get<int64_t>());
+    } else {
+        post->setSendTimestampMs(0);
+    }
+    
     post->setPostType(PostType::POST);
 
     return *post;
@@ -67,6 +76,14 @@ PostType::type Post::getPostType() const {
     return this->post_type;
 }
 
+void Post::setSendTimestampMs(int64_t _send_timestamp_ms) {
+    this->send_timestamp_ms = _send_timestamp_ms;
+}
+
+int64_t Post::getSendTimestampMs() const {
+    return this->send_timestamp_ms;
+}
+
 EMSCRIPTEN_BINDINGS(post_module) {
     class_<Post>("Post")
         .constructor<>()
@@ -74,6 +91,7 @@ EMSCRIPTEN_BINDINGS(post_module) {
         .property("creator", &Post::getCreator, &Post::setCreator)
         .property("text", &Post::getText, &Post::setText)
         .property("timestamp", &Post::getTimestamp, &Post::setTimestamp)
+        .property("send_timestamp_ms", &Post::getSendTimestampMs, &Post::setSendTimestampMs)
         .property("post_type", &Post::getPostType, &Post::setPostType)
     ;
 

@@ -1,11 +1,20 @@
 import di from "../di.js";
 
 let postTemplate = null;
+let currentOffset = 0;
+const LIMIT = 10;
+let currentType = "main";
 const isOnIndexPage = window.location.pathname.endsWith("index.html");
 
-export default function showTimeline(type) {
+export default function showTimeline(type, isLoadMore = false) {
   if (isOnIndexPage) return;
   const loggedUser = di.sessionStorageUserService.getLoggedUser();
+
+  // Reset offset if not loading more
+  if (!isLoadMore) {
+    currentOffset = 0;
+    currentType = type;
+  }
 
   if (type == "main") {
     const cardBlock = document.getElementById("card-block");
@@ -14,15 +23,27 @@ export default function showTimeline(type) {
     // Use cached template
     if (!postTemplate) return;
 
-    const onlyFriendsToggle = document.getElementById("only-friends-toggle");
-    const onlyFriends = onlyFriendsToggle ? onlyFriendsToggle.checked : false;
+    // Remove existing Load More button if resetting
+    if (!isLoadMore) {
+      const existingBtn = document.getElementById("load-more-btn");
+      if (existingBtn) existingBtn.remove();
+    }
 
-    // Fetch posts (synchronous for now based on current impl)
+    // Sort logic
+    const sortBtn = document.getElementById("sort-toggle-btn");
+    const sortAsc = sortBtn
+      ? sortBtn.getAttribute("data-sort") === "asc"
+      : false;
+    const sortOrder = sortAsc ? "asc" : "desc";
+
+    // Fetch posts with pagination
+    const endIndex = currentOffset + LIMIT;
     const postsVector = di.homeTimelineHandler.ReadHomeTimeline(
       loggedUser.userid,
-      0,
-      10,
-      onlyFriends,
+      currentOffset,
+      endIndex,
+      false, // only_friends always false (no toggle)
+      sortOrder, // Pass sort order to backend
     );
 
     const posts = [];
@@ -30,23 +51,12 @@ export default function showTimeline(type) {
       posts.push(postsVector.get(i));
     }
 
-    // Sort by timestamp based on toggle button
-    const sortBtn = document.getElementById("sort-toggle-btn");
-    const sortAsc = sortBtn
-      ? sortBtn.getAttribute("data-sort") === "asc"
-      : false;
+    // Clear current posts only if not loading more
+    if (!isLoadMore) {
+      cardBlock.innerHTML = "";
+    }
 
-    posts.sort((a, b) => {
-      const valA = Number(a.timestamp);
-      const valB = Number(b.timestamp);
-      if (valA > valB) return sortAsc ? 1 : -1;
-      if (valA < valB) return sortAsc ? -1 : 1;
-      return 0;
-    });
-
-    // Clear current posts
-    cardBlock.innerHTML = "";
-
+    // Append posts
     for (const p of posts) {
       const date = new Date(Number(p.timestamp) * 1000);
 
@@ -80,6 +90,23 @@ export default function showTimeline(type) {
 
       cardBlock.appendChild(clone);
     }
+
+    // Handle Load More Button
+    let loadMoreBtn = document.getElementById("load-more-btn");
+    if (loadMoreBtn) loadMoreBtn.remove();
+
+    // Show Load More button only if we got full LIMIT posts
+    if (posts.length >= LIMIT) {
+      loadMoreBtn = document.createElement("button");
+      loadMoreBtn.id = "load-more-btn";
+      loadMoreBtn.className = "btn btn-secondary btn-block mt-3 mb-3";
+      loadMoreBtn.innerText = "Load More";
+      loadMoreBtn.onclick = () => {
+        currentOffset += LIMIT;
+        showTimeline(currentType, true);
+      };
+      cardBlock.appendChild(loadMoreBtn);
+    }
   }
 }
 
@@ -107,12 +134,7 @@ function initTimeline() {
 
   showTimeline("main");
 
-  const toggle = document.getElementById("only-friends-toggle");
-  if (toggle) {
-    toggle.addEventListener("change", () => {
-      showTimeline("main");
-    });
-  }
+  // Removed only-friends-toggle listener
 
   $("#confirmDeletePostBtn").on("click", () => {
     const postId = $("#deletePostModal").data("post-id");

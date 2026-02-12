@@ -10,6 +10,7 @@
         integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous" />
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.7/css/all.css" />
     <link rel="stylesheet" href="style/main.css" />
+    <link rel="stylesheet" href="style/benchmark.css" />
     <link href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"
         integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous" />
     <script src="https://code.jquery.com/jquery-3.4.1.js"></script>
@@ -105,12 +106,6 @@
                 <button id="synchro">Get Posts</button>
                 <!-- Post Section Start -->
                 <div class="d-flex justify-content-end mb-2" style="padding-right: 15px;">
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="only-friends-toggle">
-                        <label class="form-check-label" for="only-friends-toggle">
-                            Only friends' posts
-                        </label>
-                    </div>
                     <div class="ml-3">
                         <button id="sort-toggle-btn" class="btn btn-outline-secondary btn-sm" data-sort="desc">
                             <i class="fas fa-arrow-down"></i> <span id="sort-label">Newest first</span>
@@ -188,6 +183,8 @@
     <script type="module" src="script/create-post.js"></script>
     <script type="module" src="script/timeline.js"></script>
     <script type="module" src="script/contact-js.js"></script>
+    <script type="module" src="script/benchmark.js"></script>
+    <script type="module" src="script/benchmark-ui.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"
         integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1"
