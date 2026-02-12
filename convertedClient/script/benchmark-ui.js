@@ -59,13 +59,6 @@
     if (!btn) return;
 
     btn.addEventListener('click', async () => {
-      
-      if (typeof window.runBenchmark === 'undefined' && id.includes('post')) {
-          console.error("Benchmark UI: runBenchmark not loaded.");
-          alert("Error: runBenchmark script not loaded.");
-          return;
-      }
-
       const originalText = btn.innerText;
       btn.innerText = 'Running...';
       btn.disabled = true;

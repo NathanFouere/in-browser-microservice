@@ -2,6 +2,7 @@ import * as Y from "yjs";
 import { WebrtcProvider } from "y-webrtc";
 import { IndexeddbPersistence } from "y-indexeddb";
 import di from "../di.js";
+import showTimeline from "./timeline.js";
 
 import { signalingServerIp } from "./consts";
 
@@ -272,13 +273,6 @@ async function createYdocAndRoom(
         item.content.getContent().forEach((post) => {
           if (post.send_timestamp_ms) {
             const senderUsername = post.creator?.username || "Unknown";
-            
-            // Skip latency measurement for own posts (not meaningful for network propagation)
-            const loggedUser = di.sessionStorageUserService.getLoggedUser();
-            if (loggedUser && senderUsername === loggedUser.username) {
-              return; // Don't measure latency for posts I created
-            }
-
             const latency = receiveTime - post.send_timestamp_ms;
             const postText = post.text || "";
 
@@ -295,6 +289,9 @@ async function createYdocAndRoom(
       });
 
       newDoc.transact(() => {});
+      
+      // Refresh timeline to display newly received posts
+      showTimeline("main");
     }
   });
   module.connections[userId] = {
