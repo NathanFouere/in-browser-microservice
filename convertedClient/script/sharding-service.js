@@ -86,10 +86,7 @@ export default class ShardingService {
         ) {
           return;
         }
-        const peerId =
-          [myUserId, clientState.establish_peer_js_connection.source_user_id]
-            .sort()
-            .join("-") + "peer-connection";
+        const peerId = clientState.establish_peer_js_connection.source_user_id;
         console.log("Establishing peer js connection with peer id ", peerId);
         this.peerjsService.connectToPeer(peerId);
       }
@@ -109,10 +106,7 @@ export default class ShardingService {
         ) {
           return;
         }
-        const peerId =
-          [myUserId, clientState.establish_peer_js_connection.source_user_id]
-            .sort()
-            .join("-") + "peer-connection";
+        const peerId = clientState.establish_peer_js_connection.source_user_id;
         console.log("Establishing peer js connection with peer id ", peerId);
         this.peerjsService.connectToPeer(peerId);
       }

@@ -12,10 +12,7 @@ function createPeerJsConnection(cur_user_id, target_user_id) {
     "and target_user_id",
     target_user_id,
   );
-  const peerId =
-    [cur_user_id, target_user_id].sort().join("-") + "peer-connection";
-  console.log("Peer id for connection is ", peerId);
-  di.peerjsService.connectToPeer(peerId);
+  console.log("Peer id for connection is ", cur_user_id);
   di.module.mainProvider.awareness.setLocalStateField(
     "establish_peer_js_connection",
     {

@@ -57,18 +57,14 @@ function fillLoggedUser() {
         e.stopPropagation();
         console.log("Synchronizing with user", user.username);
         di.module.createPeerJsConnection(loggedUser.userid, user.userId);
-        const postsDb = di.postStorageHandler.GetAllPosts();
-        console.log(
-          "user db of post is " +
-            postsDb.get(0).post_id +
-            postsDb.get(0).text +
-            " length" +
-            postsDb.size(),
-        );
+        const postsDb = di.postStorageHandler.GetAllPostsJsonFormat();
+        console.log("Sending " + postsDb + " posts to user " + user.username);
         setTimeout(() => {
+          console.log("Sending message to peerjs connection");
           di.peerjsService.sendMessage("j envoie un message");
           di.peerjsService.sendMessage(postsDb);
-        }, 10000);
+          di.peerjsService.closeConnection();
+        }, 2000);
       });
     }
 

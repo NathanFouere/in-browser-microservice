@@ -220,5 +220,6 @@ EMSCRIPTEN_BINDINGS(post_storage_Module) {
       .function("DeletePost", &PostStorageHandler::DeletePost)
       .function("ShowPostsPresence", &PostStorageHandler::ShowPostsPresence)
       .function("GetAllPosts", &PostStorageHandler::GetAllPosts)
+      .function("GetAllPostsJsonFormat", &PostStorageHandler::GetAllPostsJsonFormat)
       .function("EditPostText", &PostStorageHandler::EditPostText);
 }

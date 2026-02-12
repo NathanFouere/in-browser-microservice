@@ -75,9 +75,13 @@ const composePostHandler = await new module.ComposePostHandler(
 );
 const annuaireService = new AnnuaireService(sharedDoc.clientID, provider);
 
-const peerjsService = new PeerjsService();
-module.peerjsService = peerjsService;
-const shardingService = new ShardingService(
+const loggedUser = sessionStorageUserService.getNullableLoggedUser();
+let peerjsService = null;
+if (loggedUser) {
+  peerjsService = new PeerjsService(Number(loggedUser.userid));
+  module.peerjsService = peerjsService;
+}
+let shardingService = new ShardingService(
   sharedDoc,
   persistence,
   provider,
