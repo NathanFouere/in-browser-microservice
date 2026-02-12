@@ -2,7 +2,7 @@
   ansible.builtin.git:
     repo: "https://github.com/NathanFouere/in-browser-microservice"
     dest: "/root/in-browser-microservice"
-    version: benchmark-final
+    version: main
     force: yes
 
 - name: Générer .env
