@@ -2,7 +2,6 @@ import * as Y from "yjs";
 import { WebrtcProvider } from "y-webrtc";
 import { IndexeddbPersistence } from "y-indexeddb";
 import di from "../di.js";
-import showTimeline from "./timeline.js";
 
 import { signalingServerIp } from "./consts";
 
@@ -291,7 +290,8 @@ async function createYdocAndRoom(
       newDoc.transact(() => {});
       
       // Refresh timeline to display newly received posts
-      showTimeline("main");
+      // Refresh timeline via global (avoids circular import with timeline.js)
+      if (window.showTimeline) window.showTimeline("main");
     }
   });
   module.connections[userId] = {
