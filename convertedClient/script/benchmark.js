@@ -23,6 +23,14 @@ window.clearDatabase = async () => {
             req.onblocked = () => { console.warn("'store' database delete blocked"); resolve(); };
         });
 
+        // Clear latency metrics IndexedDB
+        await new Promise((resolve, reject) => {
+            const req = indexedDB.deleteDatabase("latency-metrics");
+            req.onsuccess = () => { console.log("Deleted 'latency-metrics' database"); resolve(); };
+            req.onerror = () => reject(req.error);
+            req.onblocked = () => { console.warn("'latency-metrics' database delete blocked"); resolve(); };
+        });
+
         console.log("All data cleared. Reloading...");
         window.location.reload();
     } catch (e) {

@@ -9,12 +9,69 @@ import { signalingServerIp } from "./consts";
 // GLOBAL LATENCY METRICS SYSTEM
 // ==========================================
 
+const METRICS_DB_NAME = "latency-metrics";
+const METRICS_STORE_NAME = "post_latency";
+
+function openMetricsDb() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(METRICS_DB_NAME, 1);
+
+    request.onupgradeneeded = () => {
+      const db = request.result;
+      if (!db.objectStoreNames.contains(METRICS_STORE_NAME)) {
+        db.createObjectStore(METRICS_STORE_NAME, {
+          keyPath: "id",
+          autoIncrement: true,
+        });
+      }
+    };
+
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+
 window.postLatencyMetrics = {
   latencies: [],
   startTime: Date.now(),
   logCounter: 0,
+  _dbPromise: null,
+  _initPromise: null,
 
-  addMeasurement(postId, senderUsername, postText, sendTime, receiveTime, latency) {
+  async init() {
+    if (this._initPromise) return this._initPromise;
+
+    this._initPromise = (async () => {
+      if (!this._dbPromise) this._dbPromise = openMetricsDb();
+      const db = await this._dbPromise;
+      const all = await new Promise((resolve, reject) => {
+        const tx = db.transaction(METRICS_STORE_NAME, "readonly");
+        const store = tx.objectStore(METRICS_STORE_NAME);
+        const request = store.getAll();
+        request.onsuccess = () => resolve(request.result || []);
+        request.onerror = () => reject(request.error);
+      });
+
+      this.latencies = all;
+    })();
+
+    return this._initPromise;
+  },
+
+  async persistMeasurement(measurement) {
+    if (!this._dbPromise) this._dbPromise = openMetricsDb();
+    const db = await this._dbPromise;
+
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(METRICS_STORE_NAME, "readwrite");
+      const store = tx.objectStore(METRICS_STORE_NAME);
+      const request = store.add(measurement);
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  },
+
+  addMeasurement(postId, senderUsername, postText, sendTime, receiveTime, latency, eventTime) {
     const isValid = latency >= 0 && latency <= 30000;
 
     let quality;
@@ -34,7 +91,7 @@ window.postLatencyMetrics = {
       ? postText.substring(0, 47) + "..."
       : postText;
 
-    this.latencies.push({
+    const measurement = {
       postId,
       senderUsername,
       postText: truncatedText,
@@ -43,7 +100,14 @@ window.postLatencyMetrics = {
       latency,
       isValid,
       quality,
+      eventTime,
+      eventTimestamp: new Date(eventTime).toISOString(),
       timestamp: new Date(receiveTime).toISOString(),
+    };
+
+    this.latencies.push(measurement);
+    this.persistMeasurement(measurement).catch((e) => {
+      console.error("Failed to persist latency measurement:", e);
     });
 
     this.logCounter++;
@@ -107,22 +171,26 @@ window.postLatencyMetrics = {
     };
   },
 
-  exportCSV() {
-    if (this.latencies.length === 0) {
+  async exportCSV() {
+    await this.init();
+    const rows = this.latencies;
+
+    if (rows.length === 0) {
       alert("No latency data to export.");
       return;
     }
 
     let csv =
       "Post ID,Sender Username,Post Text,Send Time (ms),Receive Time (ms)," +
-      "Latency (ms),Valid,Network Quality,Timestamp (ISO)\n";
+      "Latency (ms),Valid,Network Quality,Event Time (ms),Event Timestamp (ISO),Timestamp (ISO)\n";
 
-    this.latencies.forEach((m) => {
+    rows.forEach((m) => {
       const escapedText = m.postText.replace(/"/g, '""');
       csv +=
         `${m.postId},"${m.senderUsername}","${escapedText}",` +
         `${m.sendTime},${m.receiveTime},${m.latency},` +
-        `${m.isValid ? "Yes" : "No"},${m.quality},"${m.timestamp}"\n`;
+        `${m.isValid ? "Yes" : "No"},${m.quality},` +
+        `${m.eventTime},"${m.eventTimestamp}","${m.timestamp}"\n`;
     });
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
@@ -136,12 +204,25 @@ window.postLatencyMetrics = {
     URL.revokeObjectURL(url);
 
     console.log(
-      `Exported ${this.latencies.length} latency measurements to CSV`,
+      `Exported ${rows.length} latency measurements to CSV`,
     );
   },
 
-  reset() {
+  async reset() {
+    await this.init();
     const count = this.latencies.length;
+
+    if (this._dbPromise) {
+      const db = await this._dbPromise;
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction(METRICS_STORE_NAME, "readwrite");
+        const store = tx.objectStore(METRICS_STORE_NAME);
+        const request = store.clear();
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }
+
     this.latencies = [];
     this.startTime = Date.now();
     this.logCounter = 0;
@@ -151,7 +232,8 @@ window.postLatencyMetrics = {
 
 window.exportLatencyCSV = () => window.postLatencyMetrics.exportCSV();
 window.resetLatencyMetrics = () => window.postLatencyMetrics.reset();
-window.showLatencySummary = () => {
+window.showLatencySummary = async () => {
+  await window.postLatencyMetrics.init();
   const summary = window.postLatencyMetrics.getSummary();
 
   if (summary.message) {
@@ -265,12 +347,13 @@ async function createYdocAndRoom(
     if (event.transaction.origin !== null) {
       console.log("Ajout d'un post distant");
 
-      const receiveTime = Date.now();
+      const eventTime = Date.now();
 
       // Extract added posts and measure latency
       event.changes.added.forEach((item) => {
         item.content.getContent().forEach((post) => {
           if (post.send_timestamp_ms) {
+            const receiveTime = Date.now();
             const senderUsername = post.creator?.username || "Unknown";
             const latency = receiveTime - post.send_timestamp_ms;
             const postText = post.text || "";
@@ -282,6 +365,7 @@ async function createYdocAndRoom(
               post.send_timestamp_ms,
               receiveTime,
               latency,
+              eventTime,
             );
           }
         });
