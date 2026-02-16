@@ -28,8 +28,6 @@ async function sendFriendRequest(
   follow_id,
   follow_username,
 ) {
-  const newDoc = new Y.Doc();
-
   // Permet d'avoir un roomId unique pour chaque paire d'utilisateurs
   console.log(
     "Creating room for friendId",
@@ -40,6 +38,17 @@ async function sendFriendRequest(
   );
   const roomId = [cur_user_id, follow_id].sort().join("-");
 
+  // check si la connection existe dejà
+  if (di.module.connections[follow_id]) {
+    console.log(
+      `Connection for user ${follow_id} already exists, skipping creation`,
+    );
+
+    return;
+  }
+
+  const newDoc = new Y.Doc();
+
   // créer la persistence et attend sa syncrhonisation
   const persistence = new IndexeddbPersistence(roomId, newDoc);
 
@@ -47,9 +56,18 @@ async function sendFriendRequest(
     console.log(`IndexedDB synced for room ${roomId}`);
   });
 
-  const provider = new WebrtcProvider(roomId, newDoc, {
-    signaling: [signalingServerIp],
-  });
+  let provider;
+  try {
+    provider = new WebrtcProvider(roomId, newDoc, {
+      signaling: [signalingServerIp],
+    });
+  } catch (error) {
+    if (di.module.connections[follow_id]) {
+      provider = di.module.connections[follow_id].provider;
+    } else {
+      throw error;
+    }
+  }
 
   provider.awareness.setLocalStateField("user", {
     username: cur_user_name.toString(),
@@ -91,6 +109,14 @@ async function createYdocAndRoom(
   userId,
   module,
 ) {
+  // check si la connection existe dejà
+  if (module.connections[userId]) {
+    console.log(
+      `Connection for user ${userId} already exists, skipping creation`,
+    );
+    return;
+  }
+
   const newDoc = new Y.Doc();
   const persistence = new IndexeddbPersistence(roomId, newDoc);
 
@@ -98,9 +124,18 @@ async function createYdocAndRoom(
     console.log(`IndexedDB synced for room ${roomId}`);
   });
 
-  const provider = new WebrtcProvider(roomId, newDoc, {
-    signaling: [signalingServerIp],
-  });
+  let provider;
+  try {
+    provider = new WebrtcProvider(roomId, newDoc, {
+      signaling: [signalingServerIp],
+    });
+  } catch (error) {
+    if (module.connections[userId]) {
+      provider = module.connections[userId].provider;
+    } else {
+      throw error;
+    }
+  }
 
   provider.awareness.setLocalStateField("user", {
     username: cur_username,
