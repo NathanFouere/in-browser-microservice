@@ -37,6 +37,7 @@ window.postLatencyMetrics = {
   logCounter: 0,
   _dbPromise: null,
   _initPromise: null,
+  _batchOffsets: new Map(),
 
   async init() {
     if (this._initPromise) return this._initPromise;
@@ -53,43 +54,140 @@ window.postLatencyMetrics = {
       });
 
       this.latencies = all;
+      this._rebuildBatchOffsets();
+      await this._normalizeBatchOffsets();
     })();
 
     return this._initPromise;
+  },
+
+  async _recalculateBatch(eventTime) {
+    if (!this._dbPromise) this._dbPromise = openMetricsDb();
+    const db = await this._dbPromise;
+
+    const offset = this._batchOffsets.get(eventTime) ?? 0;
+    if (this.latencies.length === 0) return;
+
+    for (const m of this.latencies) {
+      if (m.eventTime !== eventTime) continue;
+      const adjusted = m.clockSkewMs - offset;
+      if (m.batchOffsetMs === offset && m.adjustedLatencyMs === adjusted) continue;
+
+      m.batchOffsetMs = offset;
+      m.adjustedLatencyMs = adjusted;
+
+      if (m.id === undefined || m.id === null) continue;
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction(METRICS_STORE_NAME, "readwrite");
+        const store = tx.objectStore(METRICS_STORE_NAME);
+        const request = store.put(m);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }
+  },
+
+  _rebuildBatchOffsets() {
+    this._batchOffsets = new Map();
+    for (const m of this.latencies) {
+      if (typeof m.eventTime !== "number" || typeof m.clockSkewMs !== "number") {
+        continue;
+      }
+      const current = this._batchOffsets.get(m.eventTime);
+      if (current === undefined || m.clockSkewMs < current) {
+        this._batchOffsets.set(m.eventTime, m.clockSkewMs);
+      }
+    }
+  },
+
+  async _normalizeBatchOffsets() {
+    if (!this._dbPromise) this._dbPromise = openMetricsDb();
+    const db = await this._dbPromise;
+
+    for (const m of this.latencies) {
+      if (typeof m.eventTime !== "number" || typeof m.clockSkewMs !== "number") {
+        continue;
+      }
+      const offset = this._batchOffsets.get(m.eventTime) ?? 0;
+      const adjusted = m.clockSkewMs - offset;
+      const { isValid, quality } = this._evaluateQuality(adjusted);
+
+      const needsUpdate =
+        m.batchOffsetMs !== offset ||
+        m.adjustedLatencyMs !== adjusted ||
+        m.isValid !== isValid ||
+        m.quality !== quality ||
+        typeof m.eventTimestamp !== "string";
+
+      if (!needsUpdate) continue;
+
+      m.batchOffsetMs = offset;
+      m.adjustedLatencyMs = adjusted;
+      m.isValid = isValid;
+      m.quality = quality;
+      m.eventTimestamp = new Date(m.eventTime).toISOString();
+
+      if (m.id === undefined || m.id === null) continue;
+
+      await new Promise((resolve, reject) => {
+        const tx = db.transaction(METRICS_STORE_NAME, "readwrite");
+        const store = tx.objectStore(METRICS_STORE_NAME);
+        const request = store.put(m);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+    }
+  },
+
+  _evaluateQuality(latencyMs) {
+    const isValid = latencyMs >= 0 && latencyMs <= 30000;
+
+    let quality;
+    if (!isValid) {
+      quality = "Invalid";
+    } else if (latencyMs < 100) {
+      quality = "Excellent";
+    } else if (latencyMs < 500) {
+      quality = "Good";
+    } else if (latencyMs < 2000) {
+      quality = "Fair";
+    } else {
+      quality = "Poor";
+    }
+
+    return { isValid, quality };
   },
 
   async persistMeasurement(measurement) {
     if (!this._dbPromise) this._dbPromise = openMetricsDb();
     const db = await this._dbPromise;
 
-    await new Promise((resolve, reject) => {
+    const id = await new Promise((resolve, reject) => {
       const tx = db.transaction(METRICS_STORE_NAME, "readwrite");
       const store = tx.objectStore(METRICS_STORE_NAME);
       const request = store.add(measurement);
-      request.onsuccess = () => resolve();
+      request.onsuccess = () => resolve(request.result);
       request.onerror = () => reject(request.error);
     });
+
+    measurement.id = id;
   },
 
   addMeasurement(postId, senderUsername, postText, sendTime, receiveTime, latency, eventTime) {
-    const isValid = latency >= 0 && latency <= 30000;
-
-    let quality;
-    if (!isValid) {
-      quality = "Invalid";
-    } else if (latency < 100) {
-      quality = "Excellent";
-    } else if (latency < 500) {
-      quality = "Good";
-    } else if (latency < 2000) {
-      quality = "Fair";
-    } else {
-      quality = "Poor";
-    }
+    const clockSkewMs = latency;
 
     const truncatedText = postText.length > 50
       ? postText.substring(0, 47) + "..."
       : postText;
+
+    const currentOffset = this._batchOffsets.get(eventTime);
+    const batchOffsetMs = currentOffset === undefined
+      ? clockSkewMs
+      : Math.min(currentOffset, clockSkewMs);
+    this._batchOffsets.set(eventTime, batchOffsetMs);
+
+    const adjustedLatencyMs = clockSkewMs - batchOffsetMs;
+    const { isValid, quality } = this._evaluateQuality(adjustedLatencyMs);
 
     const measurement = {
       postId,
@@ -97,18 +195,27 @@ window.postLatencyMetrics = {
       postText: truncatedText,
       sendTime,
       receiveTime,
-      latency,
+      latency: clockSkewMs,
+      clockSkewMs,
       isValid,
       quality,
       eventTime,
       eventTimestamp: new Date(eventTime).toISOString(),
+      batchOffsetMs,
+      adjustedLatencyMs,
       timestamp: new Date(receiveTime).toISOString(),
     };
 
     this.latencies.push(measurement);
-    this.persistMeasurement(measurement).catch((e) => {
-      console.error("Failed to persist latency measurement:", e);
-    });
+    this.persistMeasurement(measurement)
+      .then(async () => {
+        if (batchOffsetMs === clockSkewMs) return;
+        // If a new lower offset was found, update existing rows in this batch
+        await this._recalculateBatch(eventTime);
+      })
+      .catch((e) => {
+        console.error("Failed to persist latency measurement:", e);
+      });
 
     this.logCounter++;
     if (this.logCounter % 10 === 0) {
@@ -125,7 +232,7 @@ window.postLatencyMetrics = {
 
     if (!isValid) {
       console.warn(
-        `[Latency] Post ${postId}: ${latency}ms (INVALID - likely clock drift)`,
+        `[Latency] Post ${postId}: skew=${clockSkewMs}ms adjusted=${adjustedLatencyMs}ms (INVALID)`,
       );
     }
   },
@@ -133,15 +240,18 @@ window.postLatencyMetrics = {
   getAverage() {
     const valid = this.latencies.filter((m) => m.isValid);
     if (valid.length === 0) return 0;
-    return valid.reduce((acc, m) => acc + m.latency, 0) / valid.length;
+    return valid.reduce((acc, m) => acc + (m.adjustedLatencyMs ?? m.latency), 0) / valid.length;
   },
 
   getPercentile(p) {
     const valid = this.latencies.filter((m) => m.isValid);
     if (valid.length === 0) return 0;
-    const sorted = [...valid].sort((a, b) => a.latency - b.latency);
+    const sorted = [...valid].sort(
+      (a, b) => (a.adjustedLatencyMs ?? a.latency) - (b.adjustedLatencyMs ?? b.latency),
+    );
     const index = Math.ceil((p / 100) * sorted.length) - 1;
-    return sorted[Math.max(0, index)]?.latency || 0;
+    return (sorted[Math.max(0, index)]?.adjustedLatencyMs ??
+      sorted[Math.max(0, index)]?.latency) || 0;
   },
 
   getSummary() {
@@ -182,13 +292,15 @@ window.postLatencyMetrics = {
 
     let csv =
       "Post ID,Sender Username,Post Text,Send Time (ms),Receive Time (ms)," +
-      "Latency (ms),Valid,Network Quality,Event Time (ms),Event Timestamp (ISO),Timestamp (ISO)\n";
+      "Latency (ms),Clock Skew (ms),Batch Offset (ms),Adjusted Latency (ms)," +
+      "Valid,Network Quality,Event Time (ms),Event Timestamp (ISO),Timestamp (ISO)\n";
 
     rows.forEach((m) => {
       const escapedText = m.postText.replace(/"/g, '""');
       csv +=
         `${m.postId},"${m.senderUsername}","${escapedText}",` +
         `${m.sendTime},${m.receiveTime},${m.latency},` +
+        `${m.clockSkewMs},${m.batchOffsetMs},${m.adjustedLatencyMs},` +
         `${m.isValid ? "Yes" : "No"},${m.quality},` +
         `${m.eventTime},"${m.eventTimestamp}","${m.timestamp}"\n`;
     });
@@ -226,6 +338,7 @@ window.postLatencyMetrics = {
     this.latencies = [];
     this.startTime = Date.now();
     this.logCounter = 0;
+    this._batchOffsets = new Map();
     console.log(`Latency metrics reset (cleared ${count} measurements).`);
   },
 };
