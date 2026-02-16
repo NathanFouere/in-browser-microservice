@@ -11,6 +11,7 @@ import { signalingServerIp } from "./consts";
 
 const METRICS_DB_NAME = "latency-metrics";
 const METRICS_STORE_NAME = "post_latency";
+const ROLLING_WINDOW_MS = 60000;
 
 function openMetricsDb() {
   return new Promise((resolve, reject) => {
@@ -37,7 +38,6 @@ window.postLatencyMetrics = {
   logCounter: 0,
   _dbPromise: null,
   _initPromise: null,
-  _batchOffsets: new Map(),
 
   async init() {
     if (this._initPromise) return this._initPromise;
@@ -54,85 +54,68 @@ window.postLatencyMetrics = {
       });
 
       this.latencies = all;
-      this._rebuildBatchOffsets();
-      await this._normalizeBatchOffsets();
+      await this._normalizeRollingOffsets();
     })();
 
     return this._initPromise;
   },
 
-  async _recalculateBatch(eventTime) {
+  async _normalizeRollingOffsets() {
     if (!this._dbPromise) this._dbPromise = openMetricsDb();
     const db = await this._dbPromise;
-
-    const offset = this._batchOffsets.get(eventTime) ?? 0;
     if (this.latencies.length === 0) return;
 
-    for (const m of this.latencies) {
-      if (m.eventTime !== eventTime) continue;
-      const adjusted = m.clockSkewMs - offset;
-      if (m.batchOffsetMs === offset && m.adjustedLatencyMs === adjusted) continue;
+    const sorted = [...this.latencies].sort(
+      (a, b) => (a.receiveTime ?? 0) - (b.receiveTime ?? 0),
+    );
 
-      m.batchOffsetMs = offset;
-      m.adjustedLatencyMs = adjusted;
-
-      if (m.id === undefined || m.id === null) continue;
-      await new Promise((resolve, reject) => {
-        const tx = db.transaction(METRICS_STORE_NAME, "readwrite");
-        const store = tx.objectStore(METRICS_STORE_NAME);
-        const request = store.put(m);
-        request.onsuccess = () => resolve();
-        request.onerror = () => reject(request.error);
-      });
-    }
-  },
-
-  _rebuildBatchOffsets() {
-    this._batchOffsets = new Map();
-    for (const m of this.latencies) {
-      if (typeof m.eventTime !== "number" || typeof m.clockSkewMs !== "number") {
+    for (let i = 0; i < sorted.length; i++) {
+      const current = sorted[i];
+      const receiveTime = current.receiveTime;
+      const clockSkewMs = current.clockSkewMs ?? current.latency;
+      if (typeof receiveTime !== "number" || typeof clockSkewMs !== "number") {
         continue;
       }
-      const current = this._batchOffsets.get(m.eventTime);
-      if (current === undefined || m.clockSkewMs < current) {
-        this._batchOffsets.set(m.eventTime, m.clockSkewMs);
-      }
-    }
-  },
 
-  async _normalizeBatchOffsets() {
-    if (!this._dbPromise) this._dbPromise = openMetricsDb();
-    const db = await this._dbPromise;
+      const windowStart = receiveTime - ROLLING_WINDOW_MS;
+      let minSkew = clockSkewMs;
 
-    for (const m of this.latencies) {
-      if (typeof m.eventTime !== "number" || typeof m.clockSkewMs !== "number") {
-        continue;
+      for (let j = i; j >= 0; j--) {
+        const candidate = sorted[j];
+        if ((candidate.receiveTime ?? 0) < windowStart) break;
+        const candidateSkew = candidate.clockSkewMs ?? candidate.latency;
+        if (typeof candidateSkew === "number" && candidateSkew < minSkew) {
+          minSkew = candidateSkew;
+        }
       }
-      const offset = this._batchOffsets.get(m.eventTime) ?? 0;
-      const adjusted = m.clockSkewMs - offset;
+
+      const adjusted = clockSkewMs - minSkew;
       const { isValid, quality } = this._evaluateQuality(adjusted);
 
       const needsUpdate =
-        m.batchOffsetMs !== offset ||
-        m.adjustedLatencyMs !== adjusted ||
-        m.isValid !== isValid ||
-        m.quality !== quality ||
-        typeof m.eventTimestamp !== "string";
+        current.rollingOffsetMs !== minSkew ||
+        current.adjustedLatencyMs !== adjusted ||
+        current.isValid !== isValid ||
+        current.quality !== quality ||
+        typeof current.eventTimestamp !== "string";
 
       if (!needsUpdate) continue;
 
-      m.batchOffsetMs = offset;
-      m.adjustedLatencyMs = adjusted;
-      m.isValid = isValid;
-      m.quality = quality;
-      m.eventTimestamp = new Date(m.eventTime).toISOString();
+      current.clockSkewMs = clockSkewMs;
+      current.rollingOffsetMs = minSkew;
+      current.adjustedLatencyMs = adjusted;
+      current.isValid = isValid;
+      current.quality = quality;
+      if (typeof current.eventTime === "number") {
+        current.eventTimestamp = new Date(current.eventTime).toISOString();
+      }
 
-      if (m.id === undefined || m.id === null) continue;
+      if (current.id === undefined || current.id === null) continue;
 
       await new Promise((resolve, reject) => {
         const tx = db.transaction(METRICS_STORE_NAME, "readwrite");
         const store = tx.objectStore(METRICS_STORE_NAME);
-        const request = store.put(m);
+        const request = store.put(current);
         request.onsuccess = () => resolve();
         request.onerror = () => reject(request.error);
       });
@@ -180,13 +163,18 @@ window.postLatencyMetrics = {
       ? postText.substring(0, 47) + "..."
       : postText;
 
-    const currentOffset = this._batchOffsets.get(eventTime);
-    const batchOffsetMs = currentOffset === undefined
-      ? clockSkewMs
-      : Math.min(currentOffset, clockSkewMs);
-    this._batchOffsets.set(eventTime, batchOffsetMs);
+    const windowStart = receiveTime - ROLLING_WINDOW_MS;
+    let rollingOffsetMs = clockSkewMs;
+    for (const m of this.latencies) {
+      if (typeof m.receiveTime !== "number") continue;
+      if (m.receiveTime < windowStart) continue;
+      const candidateSkew = m.clockSkewMs ?? m.latency;
+      if (typeof candidateSkew === "number" && candidateSkew < rollingOffsetMs) {
+        rollingOffsetMs = candidateSkew;
+      }
+    }
 
-    const adjustedLatencyMs = clockSkewMs - batchOffsetMs;
+    const adjustedLatencyMs = clockSkewMs - rollingOffsetMs;
     const { isValid, quality } = this._evaluateQuality(adjustedLatencyMs);
 
     const measurement = {
@@ -201,21 +189,15 @@ window.postLatencyMetrics = {
       quality,
       eventTime,
       eventTimestamp: new Date(eventTime).toISOString(),
-      batchOffsetMs,
+      rollingOffsetMs,
       adjustedLatencyMs,
       timestamp: new Date(receiveTime).toISOString(),
     };
 
     this.latencies.push(measurement);
-    this.persistMeasurement(measurement)
-      .then(async () => {
-        if (batchOffsetMs === clockSkewMs) return;
-        // If a new lower offset was found, update existing rows in this batch
-        await this._recalculateBatch(eventTime);
-      })
-      .catch((e) => {
-        console.error("Failed to persist latency measurement:", e);
-      });
+    this.persistMeasurement(measurement).catch((e) => {
+      console.error("Failed to persist latency measurement:", e);
+    });
 
     this.logCounter++;
     if (this.logCounter % 10 === 0) {
@@ -223,9 +205,9 @@ window.postLatencyMetrics = {
       if (summary.valid > 0) {
         console.log(
           `[Latency] ${this.logCounter} posts received | ` +
-          `Avg: ${summary.avg.toFixed(0)}ms | ` +
-          `Min: ${summary.min}ms | Max: ${summary.max}ms | ` +
-          `P95: ${summary.p95}ms`,
+      `Avg: ${summary.avg.toFixed(0)}ms | ` +
+      `Min: ${summary.min}ms | Max: ${summary.max}ms | ` +
+      `P95: ${summary.p95}ms`,
         );
       }
     }
@@ -292,7 +274,7 @@ window.postLatencyMetrics = {
 
     let csv =
       "Post ID,Sender Username,Post Text,Send Time (ms),Receive Time (ms)," +
-      "Latency (ms),Clock Skew (ms),Batch Offset (ms),Adjusted Latency (ms)," +
+      "Latency (ms),Clock Skew (ms),Rolling Offset (ms),Adjusted Latency (ms)," +
       "Valid,Network Quality,Event Time (ms),Event Timestamp (ISO),Timestamp (ISO)\n";
 
     rows.forEach((m) => {
@@ -300,7 +282,7 @@ window.postLatencyMetrics = {
       csv +=
         `${m.postId},"${m.senderUsername}","${escapedText}",` +
         `${m.sendTime},${m.receiveTime},${m.latency},` +
-        `${m.clockSkewMs},${m.batchOffsetMs},${m.adjustedLatencyMs},` +
+        `${m.clockSkewMs},${m.rollingOffsetMs},${m.adjustedLatencyMs},` +
         `${m.isValid ? "Yes" : "No"},${m.quality},` +
         `${m.eventTime},"${m.eventTimestamp}","${m.timestamp}"\n`;
     });
@@ -338,7 +320,6 @@ window.postLatencyMetrics = {
     this.latencies = [];
     this.startTime = Date.now();
     this.logCounter = 0;
-    this._batchOffsets = new Map();
     console.log(`Latency metrics reset (cleared ${count} measurements).`);
   },
 };
