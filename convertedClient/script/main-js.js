@@ -20,7 +20,7 @@ button.addEventListener("click", (event) => {
   di.postStorageHandler.ShowPostsPresence();
 });
 
-function fillLoggedUser() {
+async function fillLoggedUser() {
   const annuaireService = di.annuaireService;
   const users = annuaireService.getListOfUsers();
 
@@ -45,9 +45,18 @@ function fillLoggedUser() {
 
     const btn = clone.querySelector(".log-user-btn");
     if (btn) {
+      const isFollowing = await di.socialGraphHandler.GetIsFollowing(
+        String(user.userId),
+      );
+      console.log("is following ? ", isFollowing);
+
+      if (isFollowing) {
+        btn.textContent = "Following";
+      }
+
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
-        onFollowLoggedUserButtonClick(user.userId, user.username);
+        onFollowLoggedUserButtonClick(user.userId, user.username, isFollowing);
       });
     }
 
@@ -72,10 +81,15 @@ function fillLoggedUser() {
   }
 }
 
-function onFollowLoggedUserButtonClick(userId, username) {
+function onFollowLoggedUserButtonClick(userId, username, isFollowing) {
   const userIdStr = String(userId);
   const usernameStr = String(username);
-  di.socialGraphHandler.SaveFollow(userIdStr, usernameStr);
+
+  if (isFollowing) {
+    di.socialGraphHandler.Unfollow(userIdStr);
+  } else {
+    di.socialGraphHandler.SaveFollow(userIdStr, usernameStr);
+  }
 }
 
 document.querySelectorAll(".follow-form").forEach((f) => {
