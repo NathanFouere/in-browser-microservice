@@ -48,7 +48,6 @@ async function fillLoggedUser() {
       const isFollowing = await di.socialGraphHandler.GetIsFollowing(
         String(user.userId),
       );
-      console.log("is following ? ", isFollowing);
 
       if (isFollowing) {
         btn.textContent = "Following";
@@ -68,11 +67,10 @@ async function fillLoggedUser() {
         di.module.createPeerJsConnection(loggedUser.userid, user.userId);
         const postsDb = di.postStorageHandler.GetAllPostsJsonFormat();
         console.log("Sending " + postsDb + " posts to user " + user.username);
+        // TODO => hack ici, il faudrait réellement rendre synchrone l'appel
         setTimeout(() => {
           console.log("Sending message to peerjs connection");
-          di.peerjsService.sendMessage("j envoie un message");
-          di.peerjsService.sendMessage(postsDb);
-          di.peerjsService.closeConnection();
+          di.synchronizeDbService.sendDb(postsDb);
         }, 2000);
       });
     }

@@ -43,6 +43,10 @@ export default class PeerjsService {
     });
     this.conn.on("data", (data) => {
       console.log("Received message:", data);
+      // TODO => si on pousse la logique ici, on pourrait tryer sur le type dans un autre service
+      if (data.type != undefined) {
+        alert(data.content);
+      }
     });
   }
 

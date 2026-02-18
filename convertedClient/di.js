@@ -8,6 +8,7 @@ import {
 } from "./script/yjs-default.js";
 import ShardingService from "./script/sharding-service.js";
 import AnnuaireService from "./script/annuaire-service.js";
+import SynchronizeDbService from "./script/synchronize-db-service.js";
 import {
   sendFriendRequest,
   createYdocAndRoom,
@@ -81,6 +82,7 @@ if (loggedUser) {
   peerjsService = new PeerjsService(Number(loggedUser.userid));
   module.peerjsService = peerjsService;
 }
+const synchronizeDbService = new SynchronizeDbService(peerjsService);
 let shardingService = new ShardingService(
   sharedDoc,
   persistence,
@@ -109,6 +111,7 @@ const di = {
   module: module,
   personnalDoc: personnalDoc,
   peerjsService: peerjsService,
+  synchronizeDbService: synchronizeDbService,
 };
 
 export default di;
