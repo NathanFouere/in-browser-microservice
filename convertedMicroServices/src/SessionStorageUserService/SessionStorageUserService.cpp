@@ -107,5 +107,6 @@ EMSCRIPTEN_BINDINGS(session_storage_user_service) {
       .constructor<>()
       .function("setLoggedUser", &SessionStorageUserService::setLoggedUser)
       .function("getLoggedUser", &SessionStorageUserService::getLoggedUser)
-      .function("removeLoggedUser", &SessionStorageUserService::removeLoggedUser);
+      .function("removeLoggedUser", &SessionStorageUserService::removeLoggedUser)
+      .function("getNullableLoggedUser", &SessionStorageUserService::getNullableLoggedUser, return_value_policy::take_ownership()); // cf . https://emscripten.org/docs/porting/connecting_cpp_and_javascript/embind.html
 }

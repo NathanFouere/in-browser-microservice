@@ -1,5 +1,6 @@
 import di from "../di.js";
 
+const loggedUser = di.sessionStorageUserService.getLoggedUser();
 function followHandler(event) {
   event.preventDefault();
 
@@ -19,7 +20,7 @@ button.addEventListener("click", (event) => {
   di.postStorageHandler.ShowPostsPresence();
 });
 
-function fillLoggedUser() {
+async function fillLoggedUser() {
   const annuaireService = di.annuaireService;
   const users = annuaireService.getListOfUsers();
 
@@ -32,6 +33,9 @@ function fillLoggedUser() {
   annuaireBlock.innerHTML = "";
 
   for (const user of users) {
+    if (user.userId == loggedUser.userid) {
+      continue;
+    }
     const clone = userTemplate.cloneNode(true);
     clone.style.display = "block";
     const usernameSpan = clone.querySelector(".username-span");
@@ -41,19 +45,49 @@ function fillLoggedUser() {
 
     const btn = clone.querySelector(".log-user-btn");
     if (btn) {
+      const isFollowing = await di.socialGraphHandler.GetIsFollowing(
+        String(user.userId),
+      );
+
+      if (isFollowing) {
+        btn.textContent = "Following";
+      }
+
       btn.addEventListener("click", (e) => {
         e.stopPropagation();
-        onFollowLoggedUserButtonClick(user.userId, user.username);
+        onFollowLoggedUserButtonClick(user.userId, user.username, isFollowing);
       });
     }
+
+    const synchroniseBtn = clone.querySelector(".synchronize-db-user-btn");
+    if (synchroniseBtn) {
+      synchroniseBtn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        console.log("Synchronizing with user", user.username);
+        di.module.createPeerJsConnection(loggedUser.userid, user.userId);
+        const postsDb = di.postStorageHandler.GetAllPostsJsonFormat();
+        console.log("Sending " + postsDb + " posts to user " + user.username);
+        // TODO => hack ici, il faudrait réellement rendre synchrone l'appel
+        setTimeout(() => {
+          console.log("Sending message to peerjs connection");
+          di.synchronizeDbService.sendDb(postsDb);
+        }, 2000);
+      });
+    }
+
     annuaireBlock.appendChild(clone);
   }
 }
 
-function onFollowLoggedUserButtonClick(userId, username) {
+function onFollowLoggedUserButtonClick(userId, username, isFollowing) {
   const userIdStr = String(userId);
   const usernameStr = String(username);
-  di.socialGraphHandler.SaveFollow(userIdStr, usernameStr);
+
+  if (isFollowing) {
+    di.socialGraphHandler.Unfollow(userIdStr);
+  } else {
+    di.socialGraphHandler.SaveFollow(userIdStr, usernameStr);
+  }
 }
 
 document.querySelectorAll(".follow-form").forEach((f) => {
