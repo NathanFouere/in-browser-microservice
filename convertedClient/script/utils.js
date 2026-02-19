@@ -148,7 +148,7 @@ async function createYdocAndRoom(
     if (event.transaction.origin !== null) {
       console.log("Ajout d'un post distant");
 
-      newDoc.transact(() => {});
+      window.location.reload();
     }
   });
   module.connections[userId] = {

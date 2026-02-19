@@ -99,6 +99,7 @@ EM_JS(void, save_post_in_indexed_db, (const char *post_json_cstr), {
     const postsArray = connection.doc.getArray("posts");
     postsArray.push([post]);
     console.log(`Post saved for user ${userId}`);
+    window.location.reload();
   }
 });
 

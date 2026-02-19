@@ -13,7 +13,9 @@ export default class AnnuaireService {
     console.log("Added user of id " + userId + " with name " + username);
 
     this.loggedUsers.set(userId, { username, clientId });
+
     this.saveInSessionStorage();
+    window.location.reload();
   }
 
   removeLoggedUser(userId) {
