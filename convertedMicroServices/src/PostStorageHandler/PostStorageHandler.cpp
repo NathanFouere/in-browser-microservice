@@ -162,12 +162,6 @@ std::string PostStorageHandler::GetAllPostsJsonFormat() {
 }
 
 
-void PostStorageHandler::ShowPostsPresence() {
-    auto postsFromIndexedDb = get_posts_from_indexed_db();
-    std::cout << "ShowPostsPresence called" << std::endl;
-}
-
-
 void PostStorageHandler::EditPostText(int64_t post_id, std::string newText) {
   for (std::size_t i = 0; i < posts.size(); i++) {
     if (this->posts[i].post_id == post_id) {
@@ -181,8 +175,6 @@ void PostStorageHandler::EditPostText(int64_t post_id, std::string newText) {
 void PostStorageHandler::DeletePost(int64_t post_id) {
   for (std::size_t i = 0; i < posts.size(); i++) {
     if (this->posts[i].post_id == post_id) {
-      std::cout << "delete_post_in_indexed_db" << "   "
-                << this->posts[i].post_id << std::endl;
 
       delete_post_in_indexed_db(this->posts[i].post_id);
       this->posts.erase(this->posts.begin() + i);
@@ -219,7 +211,6 @@ EMSCRIPTEN_BINDINGS(post_storage_Module) {
       .constructor<>()
       .function("StorePost", &PostStorageHandler::StorePost)
       .function("DeletePost", &PostStorageHandler::DeletePost)
-      .function("ShowPostsPresence", &PostStorageHandler::ShowPostsPresence)
       .function("GetAllPosts", &PostStorageHandler::GetAllPosts)
       .function("GetAllPostsJsonFormat", &PostStorageHandler::GetAllPostsJsonFormat)
       .function("EditPostText", &PostStorageHandler::EditPostText);
