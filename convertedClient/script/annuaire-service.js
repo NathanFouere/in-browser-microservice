@@ -1,3 +1,5 @@
+import { showTimeline } from "./utils.js";
+
 export default class AnnuaireService {
   static STORAGE_KEY = "annuaire";
 
@@ -15,7 +17,10 @@ export default class AnnuaireService {
     this.loggedUsers.set(userId, { username, clientId });
 
     this.saveInSessionStorage();
-    window.location.reload();
+
+    if ((window.location.href = "main.html")) {
+      showTimeline("user-timeline");
+    }
   }
 
   removeLoggedUser(userId) {

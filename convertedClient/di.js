@@ -12,6 +12,7 @@ import SynchronizeDbService from "./script/synchronize-db-service.js";
 import {
   sendFriendRequest,
   createYdocAndRoom,
+  showTimeline,
   createPeerJsConnection,
 } from "./script/utils.js";
 import { sharedRoomName, personnalRoomName } from "./script/consts";
@@ -43,6 +44,7 @@ module.connections[personnalRoomName] = {
   is_main: false,
   is_personal: true,
 };
+module.showTimeline = showTimeline;
 
 const uniqueIdHandler = await new module.UniqueIdHandler("abc");
 const mediaHandler = await new module.MediaHandler();

@@ -1,87 +1,8 @@
 import di from "../di.js";
 
+import { showTimeline } from "./utils.js";
 let postTemplate = null;
 const isOnIndexPage = window.location.pathname.endsWith("index.html");
-
-export default function showTimeline(type) {
-  if (isOnIndexPage) return;
-  const loggedUser = di.sessionStorageUserService.getLoggedUser();
-
-  if (type == "main") {
-    const cardBlock = document.getElementById("card-block");
-    if (!cardBlock) return;
-
-    // Use cached template
-    if (!postTemplate) return;
-
-    const onlyFriendsToggle = document.getElementById("only-friends-toggle");
-    const onlyFriends = onlyFriendsToggle ? onlyFriendsToggle.checked : false;
-
-    // Fetch posts (synchronous for now based on current impl)
-    const postsVector = di.homeTimelineHandler.ReadHomeTimeline(
-      loggedUser.userid,
-      0,
-      10,
-      onlyFriends,
-    );
-
-    const posts = [];
-    for (let i = 0; i < postsVector.size(); i++) {
-      posts.push(postsVector.get(i));
-    }
-
-    // Sort by timestamp based on toggle button
-    const sortBtn = document.getElementById("sort-toggle-btn");
-    const sortAsc = sortBtn
-      ? sortBtn.getAttribute("data-sort") === "asc"
-      : false;
-
-    posts.sort((a, b) => {
-      const valA = Number(a.timestamp);
-      const valB = Number(b.timestamp);
-      if (valA > valB) return sortAsc ? 1 : -1;
-      if (valA < valB) return sortAsc ? -1 : 1;
-      return 0;
-    });
-
-    // Clear current posts
-    cardBlock.innerHTML = "";
-
-    for (const p of posts) {
-      const date = new Date(Number(p.timestamp) * 1000);
-
-      const clone = postTemplate.cloneNode(true);
-      clone.style.display = "block";
-
-      // Fill data
-      clone.querySelector(".post-text").innerText = p.text;
-      clone.querySelector(".post-time").innerText = date.toString();
-
-      const creatorEl = clone.querySelector(".post-creator");
-      if (creatorEl) creatorEl.innerText = p.creator.username;
-
-      // Hook buttons
-      const deleteBtn = clone.querySelector(".delete-post-btn");
-      if (deleteBtn) {
-        deleteBtn.addEventListener("click", () => {
-          $("#deletePostModal").data("post-id", p.post_id).modal("show");
-        });
-      }
-
-      const editBtn = clone.querySelector(".edit-post-btn");
-      if (editBtn) {
-        editBtn.addEventListener("click", () => {
-          $("#editPostModal").data("post-id", p.post_id);
-          const editPostTextarea = document.getElementById("editPostTextarea");
-          editPostTextarea.value = p.text;
-          $("#editPostModal").modal("show");
-        });
-      }
-
-      cardBlock.appendChild(clone);
-    }
-  }
-}
 
 // Global exposure
 window.showTimeline = showTimeline;
