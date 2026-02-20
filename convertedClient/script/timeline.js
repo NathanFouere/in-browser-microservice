@@ -107,13 +107,6 @@ function initTimeline() {
 
   showTimeline("main");
 
-  const toggle = document.getElementById("only-friends-toggle");
-  if (toggle) {
-    toggle.addEventListener("change", () => {
-      showTimeline("main");
-    });
-  }
-
   $("#confirmDeletePostBtn").on("click", () => {
     const postId = $("#deletePostModal").data("post-id");
     if (postId) {
@@ -134,28 +127,6 @@ function initTimeline() {
       //setTimeout(() => { showTimeline("main"); }, 500);
     }
   });
-  const sortBtn = document.getElementById("sort-toggle-btn");
-  if (sortBtn) {
-    sortBtn.addEventListener("click", () => {
-      const currentSort = sortBtn.getAttribute("data-sort");
-      const newSort = currentSort === "desc" ? "asc" : "desc";
-      sortBtn.setAttribute("data-sort", newSort);
-
-      // Update UI
-      const icon = sortBtn.querySelector("i");
-      const label = document.getElementById("sort-label");
-
-      if (newSort === "asc") {
-        icon.className = "fas fa-arrow-up";
-        label.innerText = "Oldest first";
-      } else {
-        icon.className = "fas fa-arrow-down";
-        label.innerText = "Newest first";
-      }
-
-      showTimeline("main");
-    });
-  }
 
   const logoutBtn = document.getElementById("logout-btn");
   if (logoutBtn) {
