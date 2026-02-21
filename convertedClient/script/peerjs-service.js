@@ -1,9 +1,11 @@
 import { Peer } from "peerjs";
 
 export default class PeerjsService {
-  constructor(peerId) {
+  constructor(peerId, peerjsReceiverService) {
     this.peer = new Peer(peerId);
+    this.peerjsReceiverService = peerjsReceiverService;
     this.conn = null;
+    this.activePeerJsConnections = {};
 
     this.peer.on("connection", (conn) => {
       console.log("connection from:", conn.peer);
@@ -43,10 +45,7 @@ export default class PeerjsService {
     });
     this.conn.on("data", (data) => {
       console.log("Received message:", data);
-      // TODO => si on pousse la logique ici, on pourrait tryer sur le type dans un autre service
-      if (data.type != undefined) {
-        alert(data.content);
-      }
+      this.peerjsReceiverService.handleMessage(data);
     });
   }
 

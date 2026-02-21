@@ -1,5 +1,5 @@
 import di from "../di.js";
-
+import { createPeerJsConnection } from "./utils.js";
 export default class ShardingService {
   constructor(
     sharedDoc,
@@ -9,6 +9,7 @@ export default class ShardingService {
     module,
     sessionStorageUserService,
     peerjsService,
+    peerJsSenderService,
   ) {
     this.sharedDoc = sharedDoc;
     this.persistence = persistence;
@@ -17,6 +18,7 @@ export default class ShardingService {
     this.module = module;
     this.sessionStorageUserService = sessionStorageUserService;
     this.peerjsService = peerjsService;
+    this.peerJsSenderService = peerJsSenderService;
     console.log("ShardingService initialized");
     this.provider.awareness.on("change", this.handleAwarenessChange);
   }
@@ -79,6 +81,18 @@ export default class ShardingService {
 
       if (clientState?.establish_peer_js_connection != undefined) {
         console.log("received establish_peer_js_connection");
+        if (
+          this.peerjsService.activePeerJsConnections[
+            clientState.establish_peer_js_connection.source_user_id
+          ]
+        ) {
+          console.log(
+            "active peer js connection for ",
+            clientState.establish_peer_js_connection.source_user_id,
+            " already exists",
+          );
+          return;
+        }
         const myUserId = this.sessionStorageUserService.getLoggedUser().userid;
         if (
           clientState.establish_peer_js_connection.targeted_user_id !=
@@ -86,9 +100,35 @@ export default class ShardingService {
         ) {
           return;
         }
+        this.peerjsService.activePeerJsConnections[
+          clientState.establish_peer_js_connection.source_user_id
+        ] = true;
+        this.peerjsService.activePeerJsConnections[
+          clientState.establish_peer_js_connection.targeted_user_id
+        ] = true;
+        console.log(
+          "new active peer js connections is ",
+          this.peerjsService.activePeerJsConnections,
+        );
         const peerId = clientState.establish_peer_js_connection.source_user_id;
         console.log("Establishing peer js connection with peer id ", peerId);
         this.peerjsService.connectToPeer(peerId);
+        console.log(
+          "send message from sharding service : ",
+          clientState.establish_peer_js_connection.sync_type_msg,
+        );
+        await createPeerJsConnection(
+          clientState.establish_peer_js_connection.targeted_user_id,
+          clientState.establish_peer_js_connection.source_user_id,
+          clientState.establish_peer_js_connection.sync_type_msg,
+        );
+        console.log(
+          "send message from sharding service : ",
+          clientState.establish_peer_js_connection.sync_type_msg,
+        );
+        this.peerJsSenderService.sendMessage(
+          clientState.establish_peer_js_connection.sync_type_msg,
+        );
       }
     }
 
@@ -98,6 +138,18 @@ export default class ShardingService {
 
       if (clientState?.establish_peer_js_connection != undefined) {
         console.log("received establish_peer_js_connection");
+        if (
+          this.peerjsService.activePeerJsConnections[
+            clientState.establish_peer_js_connection.source_user_id
+          ]
+        ) {
+          console.log(
+            "active peer js connection for ",
+            clientState.establish_peer_js_connection.source_user_id,
+            " already exists",
+          );
+          return;
+        }
 
         const myUserId = this.sessionStorageUserService.getLoggedUser().userid;
         if (
@@ -107,8 +159,30 @@ export default class ShardingService {
           return;
         }
         const peerId = clientState.establish_peer_js_connection.source_user_id;
+        this.peerjsService.activePeerJsConnections[
+          clientState.establish_peer_js_connection.source_user_id
+        ] = true;
+        this.peerjsService.activePeerJsConnections[
+          clientState.establish_peer_js_connection.targeted_user_id
+        ] = true;
+        console.log(
+          "new active peer js connections is ",
+          this.peerjsService.activePeerJsConnections,
+        );
         console.log("Establishing peer js connection with peer id ", peerId);
         this.peerjsService.connectToPeer(peerId);
+        await createPeerJsConnection(
+          clientState.establish_peer_js_connection.targeted_user_id,
+          clientState.establish_peer_js_connection.source_user_id,
+          clientState.establish_peer_js_connection.sync_type_msg,
+        );
+        console.log(
+          "send message from sharding service : ",
+          clientState.establish_peer_js_connection.sync_type_msg,
+        );
+        this.peerJsSenderService.sendMessage(
+          clientState.establish_peer_js_connection.sync_type_msg,
+        );
       }
       if (clientState?.user != undefined) {
         this.annuaireService.communicateListOfUsers();
