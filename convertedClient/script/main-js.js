@@ -1,4 +1,5 @@
 import di from "../di.js";
+import { dbSyncTypeMsg } from "./consts.js";
 
 const loggedUser = di.sessionStorageUserService.getLoggedUser();
 function followHandler(event) {
@@ -55,17 +56,14 @@ async function fillLoggedUser() {
 
     const synchroniseBtn = clone.querySelector(".synchronize-db-user-btn");
     if (synchroniseBtn) {
-      synchroniseBtn.addEventListener("click", (e) => {
+      synchroniseBtn.addEventListener("click", async (e) => {
         e.stopPropagation();
         console.log("Synchronizing with user", user.username);
-        di.module.createPeerJsConnection(loggedUser.userid, user.userId);
-        const postsDb = di.postStorageHandler.GetAllPostsJsonFormat();
-        console.log("Sending " + postsDb + " posts to user " + user.username);
-        // TODO => hack ici, il faudrait réellement rendre synchrone l'appel
-        setTimeout(() => {
-          console.log("Sending message to peerjs connection");
-          di.synchronizeDbService.sendDb(postsDb);
-        }, 2000);
+        await di.module.createPeerJsConnection(
+          loggedUser.userid,
+          user.userId,
+          dbSyncTypeMsg,
+        );
       });
     }
 

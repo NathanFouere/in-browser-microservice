@@ -3,6 +3,7 @@ const sharedDocName = "shared-doc";
 const sharedRoomName = "shared-room";
 const personnalDocName = "personal-shared-doc";
 const personnalRoomName = "personal-shared-room";
+const dbSyncTypeMsg = "db-sync";
 
 export {
   signalingServerIp,
@@ -10,4 +11,5 @@ export {
   sharedRoomName,
   personnalRoomName,
   personnalDocName,
+  dbSyncTypeMsg,
 };

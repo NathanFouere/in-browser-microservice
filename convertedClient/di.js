@@ -16,6 +16,8 @@ import {
 } from "./script/utils.js";
 import { sharedRoomName, personnalRoomName } from "./script/consts";
 import PeerjsService from "./script/peerjs-service.js";
+import PeerJsReceiverService from "./script/peer-js-receiver-service.js";
+import PeerJsSenderService from "./script/peer-js-sender-service.js";
 
 var module = await Module();
 
@@ -78,11 +80,25 @@ const annuaireService = new AnnuaireService(sharedDoc.clientID, provider);
 
 const loggedUser = sessionStorageUserService.getNullableLoggedUser();
 let peerjsService = null;
+let peerJsReceiverService = null;
+let peerJsSenderService = null;
+let synchronizeDbService = null;
 if (loggedUser) {
-  peerjsService = new PeerjsService(Number(loggedUser.userid));
+  peerJsReceiverService = new PeerJsReceiverService(postStorageHandler);
+  peerjsService = new PeerjsService(
+    Number(loggedUser.userid),
+    peerJsReceiverService,
+  );
+  synchronizeDbService = new SynchronizeDbService(
+    peerjsService,
+    postStorageHandler,
+  );
+  peerJsSenderService = new PeerJsSenderService(
+    synchronizeDbService,
+    peerjsService,
+  );
   module.peerjsService = peerjsService;
 }
-const synchronizeDbService = new SynchronizeDbService(peerjsService);
 let shardingService = new ShardingService(
   sharedDoc,
   persistence,
@@ -91,6 +107,7 @@ let shardingService = new ShardingService(
   module,
   sessionStorageUserService,
   peerjsService,
+  peerJsSenderService,
 );
 
 const di = {

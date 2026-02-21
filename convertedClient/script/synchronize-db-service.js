@@ -1,13 +1,15 @@
 export default class SynchronizeDbService {
-  constructor(peerjsService) {
+  constructor(peerjsService, postStorageHandler) {
     this.peerjsService = peerjsService;
+    this.postStorageHandler = postStorageHandler;
   }
 
-  sendDb(db) {
+  sendPostDb() {
+    const postsDb = this.postStorageHandler.GetAllPostsJsonFormat();
+    console.log("sendMessage content", postsDb);
     this.peerjsService.sendMessage({
       type: "db-sync",
-      content: db,
+      content: postsDb,
     });
-    this.peerjsService.closeConnection();
   }
 }

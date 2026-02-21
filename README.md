@@ -6,6 +6,10 @@ The goal of this project is to port a microservices-based application (a social 
 
 The application being ported is the **Social Network** application from the [DeathStarBench](https://github.com/delimitrou/DeathStarBench) benchmark suite.
 
+## Possible Improvements
+
+This project is a POC, and many aspects could be improved. By using a single-page application, we could do away with legacy AJAX and unwanted refreshes. Integrating a proper dependency injection framework would facilitate development. Typing the project with TypeScript would make it more reliable. However, it serves as proof that this kind of project can be migrated. Testing the same approach with a larger-scale C++ project involving more business logic could be a next step.
+
 ## Server Deployment
 
 To deploy the backend infrastructure, run the Ansible playbooks provided:

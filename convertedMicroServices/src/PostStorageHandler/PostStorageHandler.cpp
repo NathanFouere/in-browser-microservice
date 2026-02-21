@@ -8,6 +8,22 @@
 using namespace emscripten;
 using nlohmann::json;
 
+EM_JS(void, save_remote_posts_in_personal_doc, (const char *posts_json_cstr), {
+  const remotePosts = JSON.parse(UTF8ToString(posts_json_cstr));
+
+  if (!Module.personnalDoc) {
+    console.log("personalDoc not available");
+    return;
+  }
+
+  const personnalDocPostsArray = Module.personnalDoc.getArray("posts");
+
+  for (const remotePost of remotePosts) {
+      personnalDocPostsArray.push([remotePost]);
+  }
+});
+
+
 EM_JS(void, edit_post_in_indexed_db, (const char *post_json_cstr), {
   const updatedPost = JSON.parse(UTF8ToString(post_json_cstr));
   for (const userId in Module.connections) {
@@ -197,6 +213,10 @@ void PostStorageHandler::StorePost(const Post &post) {
   save_post_in_indexed_db(post.toJson().dump().c_str());
 }
 
+void PostStorageHandler::StoreRemotePosts(const std::string &posts_json) {
+  save_remote_posts_in_personal_doc(posts_json.c_str());
+}
+
 Post *PostStorageHandler::ReadPost(int64_t post_id) {
   for (Post &post : this->posts) {
     if (post.post_id == post_id) {
@@ -213,5 +233,6 @@ EMSCRIPTEN_BINDINGS(post_storage_Module) {
       .function("DeletePost", &PostStorageHandler::DeletePost)
       .function("GetAllPosts", &PostStorageHandler::GetAllPosts)
       .function("GetAllPostsJsonFormat", &PostStorageHandler::GetAllPostsJsonFormat)
-      .function("EditPostText", &PostStorageHandler::EditPostText);
+      .function("EditPostText", &PostStorageHandler::EditPostText)
+      .function("StoreRemotePosts", &PostStorageHandler::StoreRemotePosts);
 }
